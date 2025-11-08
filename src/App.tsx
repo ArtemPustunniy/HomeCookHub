@@ -33,7 +33,7 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
         <UserProvider>
-          <BrowserRouter>
+          <BrowserRouter basename={import.meta.env.PROD ? '/HomeCookHub' : ''}>
             <Layout>
               <Routes>
                 <Route path="/" element={<Home />} />

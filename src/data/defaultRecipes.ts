@@ -1,4 +1,5 @@
 import { type Recipe } from '@/types'
+import { getImagePath } from '@/lib/imagePath'
 
 export const defaultRecipes: Omit<Recipe, 'id' | 'createdAt' | 'updatedAt' | 'averageRating' | 'ratingCount' | 'ratings' | 'comments'>[] = [
   {
@@ -7,7 +8,7 @@ export const defaultRecipes: Omit<Recipe, 'id' | 'createdAt' | 'updatedAt' | 'av
     difficulty: 'medium',
     cuisine: 'Итальянская',
     tags: ['quick', 'lunch', 'dinner'],
-    coverImage: '/images/recipes/spaghetti-carbonara.jpg',
+    coverImage: getImagePath('/images/recipes/spaghetti-carbonara.jpg'),
     ingredients: [
       { id: '1', name: 'Спагетти', amount: 400, unit: 'г' },
       { id: '2', name: 'Бекон', amount: 200, unit: 'г' },
@@ -39,7 +40,7 @@ export const defaultRecipes: Omit<Recipe, 'id' | 'createdAt' | 'updatedAt' | 'av
     difficulty: 'medium',
     cuisine: 'Русская',
     tags: ['healthy', 'lunch', 'dinner'],
-    coverImage: '/images/recipes/borscht.jpg',
+    coverImage: getImagePath('/images/recipes/borscht.jpg'),
     ingredients: [
       { id: '1', name: 'Свекла', amount: 2, unit: 'шт' },
       { id: '2', name: 'Капуста белокочанная', amount: 300, unit: 'г' },
@@ -75,7 +76,7 @@ export const defaultRecipes: Omit<Recipe, 'id' | 'createdAt' | 'updatedAt' | 'av
     difficulty: 'easy',
     cuisine: 'Американская',
     tags: ['quick', 'healthy', 'lunch'],
-    coverImage: '/images/recipes/caesar-salad.jpg',
+    coverImage: getImagePath('/images/recipes/caesar-salad.jpg'),
     ingredients: [
       { id: '1', name: 'Ромен салат', amount: 1, unit: 'пучок' },
       { id: '2', name: 'Куриная грудка', amount: 300, unit: 'г' },
@@ -109,7 +110,7 @@ export const defaultRecipes: Omit<Recipe, 'id' | 'createdAt' | 'updatedAt' | 'av
     difficulty: 'easy',
     cuisine: 'Русская',
     tags: ['quick', 'breakfast', 'healthy'],
-    coverImage: '/images/recipes/omelet-vegetables.jpg',
+    coverImage: getImagePath('/images/recipes/omelet-vegetables.jpg'),
     ingredients: [
       { id: '1', name: 'Яйца', amount: 4, unit: 'шт' },
       { id: '2', name: 'Помидоры', amount: 2, unit: 'шт' },
@@ -142,7 +143,7 @@ export const defaultRecipes: Omit<Recipe, 'id' | 'createdAt' | 'updatedAt' | 'av
     difficulty: 'hard',
     cuisine: 'Японская',
     tags: ['lunch', 'dinner'],
-    coverImage: '/images/recipes/california-rolls.jpg',
+    coverImage: getImagePath('/images/recipes/california-rolls.jpg'),
     ingredients: [
       { id: '1', name: 'Рис для суши', amount: 200, unit: 'г' },
       { id: '2', name: 'Нори', amount: 4, unit: 'листа' },
@@ -179,7 +180,7 @@ export const defaultRecipes: Omit<Recipe, 'id' | 'createdAt' | 'updatedAt' | 'av
     difficulty: 'hard',
     cuisine: 'Американская',
     tags: ['dessert', 'dinner'],
-    coverImage: '/images/recipes/new-york-cheesecake.jpg',
+    coverImage: getImagePath('/images/recipes/new-york-cheesecake.jpg'),
     ingredients: [
       { id: '1', name: 'Печенье песочное', amount: 200, unit: 'г' },
       { id: '2', name: 'Сливочное масло', amount: 100, unit: 'г' },
@@ -213,7 +214,7 @@ export const defaultRecipes: Omit<Recipe, 'id' | 'createdAt' | 'updatedAt' | 'av
     difficulty: 'easy',
     cuisine: 'Китайская',
     tags: ['quick', 'healthy', 'lunch', 'dinner'],
-    coverImage: '/images/recipes/chicken-noodle-soup..jpg',
+    coverImage: getImagePath('/images/recipes/chicken-noodle-soup..jpg'),
     ingredients: [
       { id: '1', name: 'Куриная грудка', amount: 400, unit: 'г' },
       { id: '2', name: 'Лапша яичная', amount: 200, unit: 'г' },
@@ -247,7 +248,7 @@ export const defaultRecipes: Omit<Recipe, 'id' | 'createdAt' | 'updatedAt' | 'av
     difficulty: 'easy',
     cuisine: 'Русская',
     tags: ['vegan', 'vegetarian', 'healthy', 'quick', 'lunch'],
-    coverImage: '/images/recipes/fresh-vegetable-salad.jpg',
+    coverImage: getImagePath('/images/recipes/fresh-vegetable-salad.jpg'),
     ingredients: [
       { id: '1', name: 'Помидоры', amount: 3, unit: 'шт' },
       { id: '2', name: 'Огурцы', amount: 2, unit: 'шт' },
