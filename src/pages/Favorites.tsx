@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useUser } from '@/contexts/UserContext'
 import { getFavorites, removeFromFavorites } from '@/services/favoritesService'
 import { getAllRecipes } from '@/services/recipeService'
@@ -36,7 +36,7 @@ export function Favorites() {
 
   const handleRemoveFavorite = (recipeId: string) => {
     removeFromFavorites(user.id, recipeId)
-    window.location.reload()
+    navigate(0)
   }
 
   return (

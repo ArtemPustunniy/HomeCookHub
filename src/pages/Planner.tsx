@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { DndContext, type DragEndEvent, closestCenter, useDroppable } from '@dnd-kit/core'
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { useSortable } from '@dnd-kit/sortable'
@@ -103,6 +103,7 @@ function SortableRecipeItem({ recipe, dayIndex }: { recipe: Recipe; dayIndex: nu
 }
 
 export function Planner() {
+  const navigate = useNavigate()
   const [planner, setPlanner] = useState(getCurrentWeekPlanner())
   const allRecipes = getAllRecipes()
   const recipesMap = useMemo(() => {
@@ -160,7 +161,7 @@ export function Planner() {
       return
     }
     generateShoppingListFromPlanner(allRecipeIds)
-    window.location.href = '/shopping-list'
+    navigate('/shopping-list')
   }
 
   return (

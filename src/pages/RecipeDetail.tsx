@@ -1,4 +1,4 @@
-import { useParams, Link } from 'react-router-dom'
+import { useParams, Link, useNavigate } from 'react-router-dom'
 import { useState } from 'react'
 import { useUser } from '@/contexts/UserContext'
 import { getRecipeById, addComment, deleteComment, setRating, getUserRating } from '@/services/recipeService'
@@ -36,6 +36,7 @@ export function RecipeDetail() {
 }
 
 function RecipeDetailContent({ recipe }: { recipe: Recipe }) {
+  const navigate = useNavigate()
   const { user } = useUser()
   const [commentText, setCommentText] = useState('')
   const [userRating, setUserRatingState] = useState<number | null>(
@@ -53,14 +54,14 @@ function RecipeDetailContent({ recipe }: { recipe: Recipe }) {
       content: commentText.trim(),
     })
     setCommentText('')
-    window.location.reload()
+    navigate(0)
   }
 
   const handleDeleteComment = (commentId: string) => {
     if (!user) return
     if (confirm('Удалить комментарий?')) {
       deleteComment(recipe.id, commentId, user.id)
-      window.location.reload()
+      navigate(0)
     }
   }
 
@@ -68,12 +69,12 @@ function RecipeDetailContent({ recipe }: { recipe: Recipe }) {
     if (!user) return
     setRating(recipe.id, user.id, rating)
     setUserRatingState(rating)
-    window.location.reload()
+    navigate(0)
   }
 
   const handleToggleFavorite = () => {
     if (!user) {
-      window.location.href = '/login'
+      navigate('/login')
       return
     }
     toggleFavorite(user.id, recipe.id)
