@@ -15,6 +15,7 @@ const difficultyLabels: Record<DifficultyLevel, string> = {
 }
 
 export function Favorites() {
+  const navigate = useNavigate()
   const { user } = useUser()
 
   if (!user) {
