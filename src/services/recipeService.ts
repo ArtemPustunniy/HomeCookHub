@@ -3,18 +3,15 @@ import { STORAGE_KEYS, getStorageItem, setStorageItem } from '@/lib/storage'
 import { nanoid } from 'nanoid'
 import { defaultRecipes } from '@/data/defaultRecipes'
 
-// Get all recipes
 export function getAllRecipes(): Recipe[] {
   return getStorageItem<Recipe[]>(STORAGE_KEYS.RECIPES, [])
 }
 
-// Get recipe by ID
 export function getRecipeById(id: string): Recipe | null {
   const recipes = getAllRecipes()
   return recipes.find((r) => r.id === id) || null
 }
 
-// Create recipe
 export function createRecipe(recipeForm: RecipeForm): Recipe {
   const recipes = getAllRecipes()
   const newRecipe: Recipe = {
@@ -33,7 +30,6 @@ export function createRecipe(recipeForm: RecipeForm): Recipe {
   return newRecipe
 }
 
-// Update recipe
 export function updateRecipe(id: string, recipeForm: RecipeForm): Recipe | null {
   const recipes = getAllRecipes()
   const index = recipes.findIndex((r) => r.id === id)
@@ -52,7 +48,6 @@ export function updateRecipe(id: string, recipeForm: RecipeForm): Recipe | null 
   return updatedRecipe
 }
 
-// Delete recipe
 export function deleteRecipe(id: string): boolean {
   const recipes = getAllRecipes()
   const filtered = recipes.filter((r) => r.id !== id)
@@ -63,7 +58,6 @@ export function deleteRecipe(id: string): boolean {
   return true
 }
 
-// Add comment
 export function addComment(recipeId: string, comment: Omit<Comment, 'id' | 'createdAt' | 'updatedAt'>): Comment | null {
   const recipe = getRecipeById(recipeId)
   if (!recipe) return null
@@ -80,7 +74,6 @@ export function addComment(recipeId: string, comment: Omit<Comment, 'id' | 'crea
   return newComment
 }
 
-// Update comment
 export function updateComment(recipeId: string, commentId: string, content: string, authorId: string): Comment | null {
   const recipe = getRecipeById(recipeId)
   if (!recipe) return null
@@ -95,7 +88,6 @@ export function updateComment(recipeId: string, commentId: string, content: stri
   return comment
 }
 
-// Delete comment
 export function deleteComment(recipeId: string, commentId: string, authorId: string): boolean {
   const recipe = getRecipeById(recipeId)
   if (!recipe) return false
@@ -109,7 +101,6 @@ export function deleteComment(recipeId: string, commentId: string, authorId: str
   return true
 }
 
-// Add or update rating
 export function setRating(recipeId: string, userId: string, rating: number): Recipe | null {
   const recipe = getRecipeById(recipeId)
   if (!recipe) return null
@@ -121,8 +112,7 @@ export function setRating(recipeId: string, userId: string, rating: number): Rec
   } else {
     recipe.ratings.push({ userId, rating })
   }
-  
-  // Recalculate average rating
+
   const total = recipe.ratings.reduce((sum, r) => sum + r.rating, 0)
   recipe.averageRating = total / recipe.ratings.length
   recipe.ratingCount = recipe.ratings.length
@@ -131,7 +121,6 @@ export function setRating(recipeId: string, userId: string, rating: number): Rec
   return recipe
 }
 
-// Get user rating for recipe
 export function getUserRating(recipeId: string, userId: string): number | null {
   const recipe = getRecipeById(recipeId)
   if (!recipe) return null
@@ -140,7 +129,6 @@ export function getUserRating(recipeId: string, userId: string): number | null {
   return rating ? rating.rating : null
 }
 
-// Initialize default recipes if storage is empty
 export function initializeDefaultRecipes(): void {
   const recipes = getAllRecipes()
   
@@ -173,8 +161,7 @@ export function initializeDefaultRecipes(): void {
       }
       return recipe
     })
-    
-    // Check if any recipes were updated
+
     const hasChanges = updatedRecipes.some((updated, index) => 
       updated.coverImage !== recipes[index]?.coverImage
     )

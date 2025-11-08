@@ -1,25 +1,38 @@
-import { useState } from 'react'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { z } from 'zod'
 import { useNavigate, Link } from 'react-router-dom'
 import { useUser } from '@/contexts/UserContext'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { FormItem, FormLabel, FormMessage } from '@/components/ui/form'
 import { nanoid } from 'nanoid'
 
+const loginSchema = z.object({
+  name: z.string().min(1, 'Имя обязательно').trim(),
+})
+
+type LoginForm = z.infer<typeof loginSchema>
+
 export function Login() {
-  const [name, setName] = useState('')
   const { setUser } = useUser()
   const navigate = useNavigate()
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (name.trim()) {
-      setUser({
-        id: nanoid(),
-        name: name.trim(),
-      })
-      navigate('/recipes')
-    }
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<LoginForm>({
+    resolver: zodResolver(loginSchema),
+  })
+
+  const onSubmit = (data: LoginForm) => {
+    setUser({
+      id: nanoid(),
+      name: data.name,
+    })
+    navigate('/recipes')
   }
 
   return (
@@ -27,24 +40,15 @@ export function Login() {
       <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle>Вход</CardTitle>
-          <CardDescription>
-            Введите ваше имя для входа в систему
-          </CardDescription>
+          <CardDescription>Введите ваше имя для входа в систему</CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <label htmlFor="name" className="text-sm font-medium">
-                Имя
-              </label>
-              <Input
-                id="name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="Ваше имя"
-                required
-              />
-            </div>
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+            <FormItem>
+              <FormLabel htmlFor="name">Имя</FormLabel>
+              <Input id="name" {...register('name')} placeholder="Ваше имя" />
+              {errors.name && <FormMessage>{errors.name.message}</FormMessage>}
+            </FormItem>
             <Button type="submit" className="w-full">
               Войти
             </Button>
@@ -60,4 +64,3 @@ export function Login() {
     </div>
   )
 }
-

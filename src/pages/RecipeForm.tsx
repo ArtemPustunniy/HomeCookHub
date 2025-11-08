@@ -1,14 +1,17 @@
-import { useState, useEffect } from 'react'
+import { useEffect } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
+import { useForm, useFieldArray } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
 import { useUser } from '@/contexts/UserContext'
-import { getRecipeById, createRecipe, updateRecipe, deleteRecipe } from '@/services/recipeService'
-import { type RecipeForm as RecipeFormType, type Ingredient, DifficultyLevel, RecipeTag } from '@/types'
+import { useRecipe, useCreateRecipe, useUpdateRecipe, useDeleteRecipe } from '@/hooks/useRecipes'
+import { RecipeFormSchema, type RecipeForm, DifficultyLevel, RecipeTag } from '@/types'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Select } from '@/components/ui/select'
 import { Badge } from '@/components/ui/badge'
+import { FormItem, FormLabel, FormMessage } from '@/components/ui/form'
 import { ArrowLeft, Plus, X, Trash2 } from 'lucide-react'
 import { nanoid } from 'nanoid'
 
@@ -51,50 +54,83 @@ export function RecipeForm() {
   const navigate = useNavigate()
   const isEdit = !!id
 
-  const [formData, setFormData] = useState<RecipeFormType>({
-    title: '',
-    cookingTime: 30,
-    difficulty: 'medium',
-    cuisine: '',
-    tags: [],
-    coverImage: '',
-    ingredients: [],
-    instructions: [],
-    nutrition: undefined,
-    authorId: user?.id || '',
-    authorName: user?.name || '',
+  const { data: recipe } = useRecipe(id)
+  const createMutation = useCreateRecipe()
+  const updateMutation = useUpdateRecipe()
+  const deleteMutation = useDeleteRecipe()
+
+  const {
+    register,
+    handleSubmit,
+    control,
+    watch,
+    setValue,
+    reset,
+    formState: { errors },
+  } = useForm<RecipeForm>({
+    resolver: zodResolver(RecipeFormSchema),
+    defaultValues: {
+      title: '',
+      cookingTime: 30,
+      difficulty: 'medium',
+      cuisine: '',
+      tags: [],
+      coverImage: '',
+      ingredients: [],
+      instructions: [],
+      nutrition: undefined,
+      authorId: user?.id || '',
+      authorName: user?.name || '',
+    },
   })
 
+  const {
+    fields: ingredientFields,
+    append: appendIngredient,
+    remove: removeIngredient,
+  } = useFieldArray({
+    control,
+    name: 'ingredients',
+  })
+
+  const instructions = watch('instructions')
+  
+  const addInstruction = () => {
+    const current = instructions || []
+    setValue('instructions', [...current, ''])
+  }
+
+  const removeInstruction = (index: number) => {
+    const current = instructions || []
+    setValue('instructions', current.filter((_, i) => i !== index))
+  }
+
+  const watchedTags = watch('tags')
+
   useEffect(() => {
-    if (isEdit && id) {
-      const recipe = getRecipeById(id)
-      if (recipe) {
-        if (recipe.authorId !== user?.id) {
-          navigate('/recipes')
-          return
-        }
-        setFormData({
-          title: recipe.title,
-          cookingTime: recipe.cookingTime,
-          difficulty: recipe.difficulty,
-          cuisine: recipe.cuisine,
-          tags: recipe.tags,
-          coverImage: recipe.coverImage || '',
-          ingredients: recipe.ingredients,
-          instructions: recipe.instructions,
-          nutrition: recipe.nutrition,
-          authorId: recipe.authorId,
-          authorName: recipe.authorName,
-        })
+    if (isEdit && recipe) {
+      if (recipe.authorId !== user?.id) {
+        navigate('/recipes')
+        return
       }
+      reset({
+        title: recipe.title,
+        cookingTime: recipe.cookingTime,
+        difficulty: recipe.difficulty,
+        cuisine: recipe.cuisine,
+        tags: recipe.tags,
+        coverImage: recipe.coverImage || '',
+        ingredients: recipe.ingredients,
+        instructions: recipe.instructions,
+        nutrition: recipe.nutrition,
+        authorId: recipe.authorId,
+        authorName: recipe.authorName,
+      })
     } else if (user) {
-      setFormData((prev) => ({
-        ...prev,
-        authorId: user.id,
-        authorName: user.name,
-      }))
+      setValue('authorId', user.id)
+      setValue('authorName', user.name)
     }
-  }, [id, isEdit, user, navigate])
+  }, [isEdit, recipe, user, navigate, reset, setValue])
 
   if (!user) {
     return (
@@ -107,80 +143,30 @@ export function RecipeForm() {
     )
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    
+  const onSubmit = (data: RecipeForm) => {
     if (isEdit && id) {
-      updateRecipe(id, formData)
+      updateMutation.mutate({ id, recipeForm: data })
     } else {
-      createRecipe(formData)
+      createMutation.mutate(data)
     }
-    
     navigate('/recipes')
   }
 
   const handleDelete = () => {
     if (!id) return
     if (confirm('Вы уверены, что хотите удалить этот рецепт?')) {
-      deleteRecipe(id)
+      deleteMutation.mutate(id)
       navigate('/recipes')
     }
   }
 
-  const addIngredient = () => {
-    setFormData((prev) => ({
-      ...prev,
-      ingredients: [
-        ...prev.ingredients,
-        { id: nanoid(), name: '', amount: undefined, unit: '' },
-      ],
-    }))
-  }
-
-  const updateIngredient = (index: number, field: keyof Ingredient, value: string | number | undefined) => {
-    setFormData((prev) => {
-      const newIngredients = [...prev.ingredients]
-      newIngredients[index] = { ...newIngredients[index], [field]: value }
-      return { ...prev, ingredients: newIngredients }
-    })
-  }
-
-  const removeIngredient = (index: number) => {
-    setFormData((prev) => ({
-      ...prev,
-      ingredients: prev.ingredients.filter((_, i) => i !== index),
-    }))
-  }
-
-  const addInstruction = () => {
-    setFormData((prev) => ({
-      ...prev,
-      instructions: [...prev.instructions, ''],
-    }))
-  }
-
-  const updateInstruction = (index: number, value: string) => {
-    setFormData((prev) => {
-      const newInstructions = [...prev.instructions]
-      newInstructions[index] = value
-      return { ...prev, instructions: newInstructions }
-    })
-  }
-
-  const removeInstruction = (index: number) => {
-    setFormData((prev) => ({
-      ...prev,
-      instructions: prev.instructions.filter((_, i) => i !== index),
-    }))
-  }
-
   const toggleTag = (tag: RecipeTag) => {
-    setFormData((prev) => ({
-      ...prev,
-      tags: prev.tags.includes(tag)
-        ? prev.tags.filter((t) => t !== tag)
-        : [...prev.tags, tag],
-    }))
+    const currentTags = watchedTags || []
+    if (currentTags.includes(tag)) {
+      setValue('tags', currentTags.filter((t) => t !== tag))
+    } else {
+      setValue('tags', [...currentTags, tag])
+    }
   }
 
   return (
@@ -203,55 +189,40 @@ export function RecipeForm() {
           )}
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Название *</label>
-              <Input
-                value={formData.title}
-                onChange={(e) => setFormData((prev) => ({ ...prev, title: e.target.value }))}
-                required
-              />
-            </div>
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+            <FormItem>
+              <FormLabel>Название *</FormLabel>
+              <Input {...register('title')} />
+              {errors.title && <FormMessage>{errors.title.message}</FormMessage>}
+            </FormItem>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Время приготовления (мин) *</label>
+              <FormItem>
+                <FormLabel>Время приготовления (мин) *</FormLabel>
                 <Input
                   type="number"
                   min="1"
-                  value={formData.cookingTime}
-                  onChange={(e) =>
-                    setFormData((prev) => ({ ...prev, cookingTime: parseInt(e.target.value) || 0 }))
-                  }
-                  required
+                  {...register('cookingTime', { valueAsNumber: true })}
                 />
-              </div>
+                {errors.cookingTime && <FormMessage>{errors.cookingTime.message}</FormMessage>}
+              </FormItem>
 
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Сложность *</label>
-                <Select
-                  value={formData.difficulty}
-                  onChange={(e) =>
-                    setFormData((prev) => ({ ...prev, difficulty: e.target.value as DifficultyLevel }))
-                  }
-                  required
-                >
+              <FormItem>
+                <FormLabel>Сложность *</FormLabel>
+                <Select {...register('difficulty')}>
                   {DIFFICULTIES.map((diff) => (
                     <option key={diff.value} value={diff.value}>
                       {diff.label}
                     </option>
                   ))}
                 </Select>
-              </div>
+                {errors.difficulty && <FormMessage>{errors.difficulty.message}</FormMessage>}
+              </FormItem>
             </div>
 
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Кухня *</label>
-              <Select
-                value={formData.cuisine}
-                onChange={(e) => setFormData((prev) => ({ ...prev, cuisine: e.target.value }))}
-                required
-              >
+            <FormItem>
+              <FormLabel>Кухня *</FormLabel>
+              <Select {...register('cuisine')}>
                 <option value="">Выберите кухню</option>
                 {CUISINES.map((cuisine) => (
                   <option key={cuisine} value={cuisine}>
@@ -259,25 +230,26 @@ export function RecipeForm() {
                   </option>
                 ))}
               </Select>
-            </div>
+              {errors.cuisine && <FormMessage>{errors.cuisine.message}</FormMessage>}
+            </FormItem>
 
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Обложка (URL)</label>
+            <FormItem>
+              <FormLabel>Обложка (URL)</FormLabel>
               <Input
                 type="url"
-                value={formData.coverImage}
-                onChange={(e) => setFormData((prev) => ({ ...prev, coverImage: e.target.value }))}
+                {...register('coverImage')}
                 placeholder="https://example.com/image.jpg"
               />
-            </div>
+              {errors.coverImage && <FormMessage>{errors.coverImage.message}</FormMessage>}
+            </FormItem>
 
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Теги</label>
+            <FormItem>
+              <FormLabel>Теги</FormLabel>
               <div className="flex flex-wrap gap-2">
                 {TAGS.map((tag) => (
                   <Badge
                     key={tag.value}
-                    variant={formData.tags.includes(tag.value) ? 'default' : 'outline'}
+                    variant={watchedTags?.includes(tag.value) ? 'default' : 'outline'}
                     className="cursor-pointer"
                     onClick={() => toggleTag(tag.value)}
                   >
@@ -285,43 +257,38 @@ export function RecipeForm() {
                   </Badge>
                 ))}
               </div>
-            </div>
+            </FormItem>
 
-            <div className="space-y-2">
+            <FormItem>
               <div className="flex justify-between items-center">
-                <label className="text-sm font-medium">Ингредиенты *</label>
-                <Button type="button" variant="outline" size="sm" onClick={addIngredient}>
+                <FormLabel>Ингредиенты *</FormLabel>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => appendIngredient({ id: nanoid(), name: '', amount: undefined, unit: '' })}
+                >
                   <Plus className="h-4 w-4 mr-2" />
                   Добавить
                 </Button>
               </div>
               <div className="space-y-2">
-                {formData.ingredients.map((ingredient, index) => (
-                  <div key={ingredient.id} className="flex gap-2 items-center">
+                {ingredientFields.map((field, index) => (
+                  <div key={field.id} className="flex gap-2 items-center">
                     <Input
                       placeholder="Название"
-                      value={ingredient.name}
-                      onChange={(e) => updateIngredient(index, 'name', e.target.value)}
+                      {...register(`ingredients.${index}.name`)}
                       className="flex-1"
-                      required
                     />
                     <Input
                       type="number"
                       placeholder="Количество"
-                      value={ingredient.amount || ''}
-                      onChange={(e) =>
-                        updateIngredient(
-                          index,
-                          'amount',
-                          e.target.value ? parseFloat(e.target.value) : undefined
-                        )
-                      }
+                      {...register(`ingredients.${index}.amount`, { valueAsNumber: true })}
                       className="w-24"
                     />
                     <Input
                       placeholder="Ед. изм."
-                      value={ingredient.unit || ''}
-                      onChange={(e) => updateIngredient(index, 'unit', e.target.value)}
+                      {...register(`ingredients.${index}.unit`)}
                       className="w-24"
                     />
                     <Button
@@ -334,28 +301,32 @@ export function RecipeForm() {
                     </Button>
                   </div>
                 ))}
+                {errors.ingredients && <FormMessage>{errors.ingredients.message}</FormMessage>}
               </div>
-            </div>
+            </FormItem>
 
-            <div className="space-y-2">
+            <FormItem>
               <div className="flex justify-between items-center">
-                <label className="text-sm font-medium">Инструкции *</label>
-                <Button type="button" variant="outline" size="sm" onClick={addInstruction}>
+                <FormLabel>Инструкции *</FormLabel>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={addInstruction}
+                >
                   <Plus className="h-4 w-4 mr-2" />
                   Добавить шаг
                 </Button>
               </div>
               <div className="space-y-2">
-                {formData.instructions.map((instruction, index) => (
+                {instructions?.map((_, index) => (
                   <div key={index} className="flex gap-2">
                     <span className="flex-shrink-0 w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-semibold mt-2">
                       {index + 1}
                     </span>
                     <Textarea
-                      value={instruction}
-                      onChange={(e) => updateInstruction(index, e.target.value)}
+                      {...register(`instructions.${index}`)}
                       placeholder={`Шаг ${index + 1}`}
-                      required
                     />
                     <Button
                       type="button"
@@ -368,78 +339,45 @@ export function RecipeForm() {
                     </Button>
                   </div>
                 ))}
+                {errors.instructions && <FormMessage>{errors.instructions.message}</FormMessage>}
               </div>
-            </div>
+            </FormItem>
 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Калории</label>
+              <FormItem>
+                <FormLabel>Калории</FormLabel>
                 <Input
                   type="number"
-                  value={formData.nutrition?.calories || ''}
-                  onChange={(e) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      nutrition: {
-                        ...prev.nutrition,
-                        calories: e.target.value ? parseFloat(e.target.value) : undefined,
-                      },
-                    }))
-                  }
+                  {...register('nutrition.calories', { valueAsNumber: true })}
                 />
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Белки (г)</label>
+              </FormItem>
+              <FormItem>
+                <FormLabel>Белки (г)</FormLabel>
                 <Input
                   type="number"
-                  value={formData.nutrition?.protein || ''}
-                  onChange={(e) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      nutrition: {
-                        ...prev.nutrition,
-                        protein: e.target.value ? parseFloat(e.target.value) : undefined,
-                      },
-                    }))
-                  }
+                  {...register('nutrition.protein', { valueAsNumber: true })}
                 />
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Углеводы (г)</label>
+              </FormItem>
+              <FormItem>
+                <FormLabel>Углеводы (г)</FormLabel>
                 <Input
                   type="number"
-                  value={formData.nutrition?.carbs || ''}
-                  onChange={(e) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      nutrition: {
-                        ...prev.nutrition,
-                        carbs: e.target.value ? parseFloat(e.target.value) : undefined,
-                      },
-                    }))
-                  }
+                  {...register('nutrition.carbs', { valueAsNumber: true })}
                 />
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Жиры (г)</label>
+              </FormItem>
+              <FormItem>
+                <FormLabel>Жиры (г)</FormLabel>
                 <Input
                   type="number"
-                  value={formData.nutrition?.fat || ''}
-                  onChange={(e) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      nutrition: {
-                        ...prev.nutrition,
-                        fat: e.target.value ? parseFloat(e.target.value) : undefined,
-                      },
-                    }))
-                  }
+                  {...register('nutrition.fat', { valueAsNumber: true })}
                 />
-              </div>
+              </FormItem>
             </div>
 
             <div className="flex gap-4">
-              <Button type="submit">{isEdit ? 'Сохранить' : 'Создать'}</Button>
+              <Button type="submit" disabled={createMutation.isPending || updateMutation.isPending}>
+                {isEdit ? 'Сохранить' : 'Создать'}
+              </Button>
               <Button type="button" variant="outline" asChild>
                 <Link to={isEdit ? `/recipes/${id}` : '/recipes'}>Отмена</Link>
               </Button>
@@ -450,4 +388,3 @@ export function RecipeForm() {
     </div>
   )
 }
-

@@ -33,27 +33,22 @@ export function Recipes() {
 
   const filteredRecipes = useMemo(() => {
     return recipes.filter((recipe) => {
-      // Search
       if (searchQuery && !recipe.title.toLowerCase().includes(searchQuery.toLowerCase())) {
         return false
       }
 
-      // Cuisine filter
       if (selectedCuisine !== 'all' && recipe.cuisine !== selectedCuisine) {
         return false
       }
 
-      // Difficulty filter
       if (selectedDifficulty !== 'all' && recipe.difficulty !== selectedDifficulty) {
         return false
       }
 
-      // Tag filter
       if (selectedTag !== 'all' && !recipe.tags.includes(selectedTag as RecipeTag)) {
         return false
       }
 
-      // Time filter
       if (maxTime && recipe.cookingTime > parseInt(maxTime)) {
         return false
       }

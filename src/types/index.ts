@@ -1,6 +1,5 @@
 import { z } from 'zod'
 
-// Enums
 export const DifficultyLevel = z.enum(['easy', 'medium', 'hard'])
 export type DifficultyLevel = z.infer<typeof DifficultyLevel>
 
@@ -20,7 +19,6 @@ export const RecipeTag = z.enum([
 ])
 export type RecipeTag = z.infer<typeof RecipeTag>
 
-// Ingredient schema
 export const IngredientSchema = z.object({
   id: z.string(),
   name: z.string().min(1, 'Название ингредиента обязательно'),
@@ -29,7 +27,6 @@ export const IngredientSchema = z.object({
 })
 export type Ingredient = z.infer<typeof IngredientSchema>
 
-// Nutrition schema (optional)
 export const NutritionSchema = z.object({
   calories: z.number().optional(),
   protein: z.number().optional(),
@@ -39,14 +36,12 @@ export const NutritionSchema = z.object({
 })
 export type Nutrition = z.infer<typeof NutritionSchema>
 
-// Rating schema
 export const RatingSchema = z.object({
   userId: z.string(),
   rating: z.number().min(1).max(5),
 })
 export type Rating = z.infer<typeof RatingSchema>
 
-// Comment schema
 export const CommentSchema = z.object({
   id: z.string(),
   recipeId: z.string(),
@@ -58,7 +53,6 @@ export const CommentSchema = z.object({
 })
 export type Comment = z.infer<typeof CommentSchema>
 
-// Recipe schema
 export const RecipeSchema = z.object({
   id: z.string(),
   title: z.string().min(1, 'Название рецепта обязательно'),
@@ -81,7 +75,6 @@ export const RecipeSchema = z.object({
 })
 export type Recipe = z.infer<typeof RecipeSchema>
 
-// Recipe creation/update schema (without id, timestamps, ratings)
 export const RecipeFormSchema = RecipeSchema.omit({
   id: true,
   createdAt: true,
@@ -93,7 +86,6 @@ export const RecipeFormSchema = RecipeSchema.omit({
 })
 export type RecipeForm = z.infer<typeof RecipeFormSchema>
 
-// Planner schema
 export const PlannerDaySchema = z.object({
   date: z.string(), // ISO date string
   recipeIds: z.array(z.string()).default([]),
@@ -106,7 +98,6 @@ export const PlannerSchema = z.object({
 })
 export type Planner = z.infer<typeof PlannerSchema>
 
-// Shopping List schema
 export const ShoppingListItemSchema = z.object({
   id: z.string(),
   name: z.string().min(1, 'Название продукта обязательно'),
@@ -124,7 +115,6 @@ export const ShoppingListSchema = z.object({
 })
 export type ShoppingList = z.infer<typeof ShoppingListSchema>
 
-// User favorites
 export const FavoritesSchema = z.object({
   userId: z.string(),
   recipeIds: z.array(z.string()).default([]),

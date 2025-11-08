@@ -3,7 +3,6 @@ import { STORAGE_KEYS, getStorageItem, setStorageItem } from '@/lib/storage'
 import { nanoid } from 'nanoid'
 import { getAllRecipes } from './recipeService'
 
-// Get current shopping list
 export function getShoppingList(): ShoppingList {
   const list = getStorageItem<ShoppingList | null>(STORAGE_KEYS.SHOPPING_LIST, null)
   
@@ -20,12 +19,10 @@ export function getShoppingList(): ShoppingList {
   return newList
 }
 
-// Generate shopping list from planner recipes
 export function generateShoppingListFromPlanner(recipeIds: string[]): ShoppingList {
   const recipes = getAllRecipes()
   const selectedRecipes = recipes.filter((r) => recipeIds.includes(r.id))
-  
-  // Aggregate ingredients
+
   const ingredientMap = new Map<string, { amount?: number; unit?: string }>()
   
   selectedRecipes.forEach((recipe) => {
@@ -34,11 +31,9 @@ export function generateShoppingListFromPlanner(recipeIds: string[]): ShoppingLi
       const existing = ingredientMap.get(key)
       
       if (existing) {
-        // Merge amounts if units match
         if (existing.unit === ingredient.unit && existing.amount && ingredient.amount) {
           existing.amount += ingredient.amount
         } else {
-          // Keep separate if units differ or one has no amount
           ingredientMap.set(`${key}_${nanoid()}`, {
             amount: ingredient.amount,
             unit: ingredient.unit,
@@ -52,11 +47,10 @@ export function generateShoppingListFromPlanner(recipeIds: string[]): ShoppingLi
       }
     })
   })
-  
-  // Convert to shopping list items
+
   const items: ShoppingListItem[] = Array.from(ingredientMap.entries()).map(([name, data]) => ({
     id: nanoid(),
-    name: name.split('_')[0], // Remove suffix if added
+    name: name.split('_')[0],
     amount: data.amount,
     unit: data.unit,
     purchased: false,
@@ -70,7 +64,6 @@ export function generateShoppingListFromPlanner(recipeIds: string[]): ShoppingLi
   return list
 }
 
-// Add item to shopping list
 export function addShoppingListItem(item: Omit<ShoppingListItem, 'id'>): ShoppingList {
   const list = getShoppingList()
   
@@ -84,7 +77,6 @@ export function addShoppingListItem(item: Omit<ShoppingListItem, 'id'>): Shoppin
   return list
 }
 
-// Update shopping list item
 export function updateShoppingListItem(itemId: string, updates: Partial<ShoppingListItem>): ShoppingList | null {
   const list = getShoppingList()
   const index = list.items.findIndex((item) => item.id === itemId)
@@ -97,7 +89,6 @@ export function updateShoppingListItem(itemId: string, updates: Partial<Shopping
   return list
 }
 
-// Delete shopping list item
 export function deleteShoppingListItem(itemId: string): ShoppingList | null {
   const list = getShoppingList()
   const filtered = list.items.filter((item) => item.id !== itemId)
@@ -110,7 +101,6 @@ export function deleteShoppingListItem(itemId: string): ShoppingList | null {
   return list
 }
 
-// Toggle purchased status
 export function togglePurchased(itemId: string): ShoppingList | null {
   const list = getShoppingList()
   const item = list.items.find((item) => item.id === itemId)
@@ -123,7 +113,6 @@ export function togglePurchased(itemId: string): ShoppingList | null {
   return list
 }
 
-// Clear shopping list
 export function clearShoppingList(): ShoppingList {
   const list = getShoppingList()
   list.items = []

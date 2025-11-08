@@ -1,7 +1,6 @@
 import { type Favorites } from '@/types'
 import { STORAGE_KEYS, getStorageItem, setStorageItem } from '@/lib/storage'
 
-// Get user favorites
 export function getFavorites(userId: string): Favorites {
   const allFavorites = getStorageItem<Favorites[]>(STORAGE_KEYS.FAVORITES, [])
   const favorites = allFavorites.find((f) => f.userId === userId)
@@ -18,7 +17,6 @@ export function getFavorites(userId: string): Favorites {
   return newFavorites
 }
 
-// Add to favorites
 export function addToFavorites(userId: string, recipeId: string): Favorites {
   const favorites = getFavorites(userId)
   
@@ -40,7 +38,6 @@ export function addToFavorites(userId: string, recipeId: string): Favorites {
   return favorites
 }
 
-// Remove from favorites
 export function removeFromFavorites(userId: string, recipeId: string): Favorites {
   const favorites = getFavorites(userId)
   favorites.recipeIds = favorites.recipeIds.filter((id) => id !== recipeId)
@@ -56,13 +53,11 @@ export function removeFromFavorites(userId: string, recipeId: string): Favorites
   return favorites
 }
 
-// Check if recipe is in favorites
 export function isFavorite(userId: string, recipeId: string): boolean {
   const favorites = getFavorites(userId)
   return favorites.recipeIds.includes(recipeId)
 }
 
-// Toggle favorite
 export function toggleFavorite(userId: string, recipeId: string): Favorites {
   if (isFavorite(userId, recipeId)) {
     return removeFromFavorites(userId, recipeId)

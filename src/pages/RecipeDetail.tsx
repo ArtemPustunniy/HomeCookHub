@@ -53,7 +53,7 @@ function RecipeDetailContent({ recipe }: { recipe: Recipe }) {
       content: commentText.trim(),
     })
     setCommentText('')
-    window.location.reload() // Simple refresh to show new comment
+    window.location.reload()
   }
 
   const handleDeleteComment = (commentId: string) => {

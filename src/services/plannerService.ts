@@ -2,14 +2,12 @@ import { type Planner, type PlannerDay } from '@/types'
 import { STORAGE_KEYS, getStorageItem, setStorageItem } from '@/lib/storage'
 import { startOfWeek, addDays, format, parseISO } from 'date-fns'
 
-// Get planner for a specific week
 export function getPlannerForWeek(weekStart: string): Planner {
   const planners = getStorageItem<Planner[]>(STORAGE_KEYS.PLANNER, [])
   const planner = planners.find((p) => p.weekStart === weekStart)
   
   if (planner) return planner
-  
-  // Create new planner for the week
+
   const weekStartDate = parseISO(weekStart)
   const days: PlannerDay[] = []
   
@@ -31,14 +29,12 @@ export function getPlannerForWeek(weekStart: string): Planner {
   return newPlanner
 }
 
-// Get current week planner
 export function getCurrentWeekPlanner(): Planner {
   const today = new Date()
   const weekStart = format(startOfWeek(today, { weekStartsOn: 1 }), 'yyyy-MM-dd')
   return getPlannerForWeek(weekStart)
 }
 
-// Add recipe to day
 export function addRecipeToDay(weekStart: string, dayIndex: number, recipeId: string): Planner | null {
   const planner = getPlannerForWeek(weekStart)
   
@@ -60,7 +56,6 @@ export function addRecipeToDay(weekStart: string, dayIndex: number, recipeId: st
   return planner
 }
 
-// Remove recipe from day
 export function removeRecipeFromDay(weekStart: string, dayIndex: number, recipeId: string): Planner | null {
   const planner = getPlannerForWeek(weekStart)
   
@@ -79,16 +74,13 @@ export function removeRecipeFromDay(weekStart: string, dayIndex: number, recipeI
   return planner
 }
 
-// Move recipe between days
 export function moveRecipe(weekStart: string, fromDayIndex: number, toDayIndex: number, recipeId: string): Planner | null {
   const planner = getPlannerForWeek(weekStart)
   
   if (fromDayIndex < 0 || fromDayIndex >= 7 || toDayIndex < 0 || toDayIndex >= 7) return null
-  
-  // Remove from source day
+
   planner.days[fromDayIndex].recipeIds = planner.days[fromDayIndex].recipeIds.filter((id) => id !== recipeId)
-  
-  // Add to target day (if not already there)
+
   if (!planner.days[toDayIndex].recipeIds.includes(recipeId)) {
     planner.days[toDayIndex].recipeIds.push(recipeId)
   }
@@ -104,7 +96,6 @@ export function moveRecipe(weekStart: string, fromDayIndex: number, toDayIndex: 
   return planner
 }
 
-// Clear day
 export function clearDay(weekStart: string, dayIndex: number): Planner | null {
   const planner = getPlannerForWeek(weekStart)
   
@@ -123,7 +114,6 @@ export function clearDay(weekStart: string, dayIndex: number): Planner | null {
   return planner
 }
 
-// Clear week
 export function clearWeek(weekStart: string): Planner | null {
   const planner = getPlannerForWeek(weekStart)
   

@@ -1,4 +1,3 @@
-// Storage keys
 export const STORAGE_KEYS = {
   RECIPES: 'homecookhub_recipes',
   PLANNER: 'homecookhub_planner',
@@ -8,7 +7,6 @@ export const STORAGE_KEYS = {
   CURRENT_USER: 'homecookhub_current_user',
 } as const
 
-// Generic storage helpers
 export function getStorageItem<T>(key: string, defaultValue: T): T {
   if (typeof window === 'undefined') return defaultValue
   
