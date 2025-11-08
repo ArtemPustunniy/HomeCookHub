@@ -4,6 +4,7 @@ import { useUser } from '@/contexts/UserContext'
 import { getRecipeById, addComment, deleteComment, setRating, getUserRating } from '@/services/recipeService'
 import { isFavorite, toggleFavorite } from '@/services/favoritesService'
 import { type Recipe, DifficultyLevel } from '@/types'
+import { getImagePath } from '@/lib/imagePath'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -96,7 +97,7 @@ function RecipeDetailContent({ recipe }: { recipe: Recipe }) {
         <div className="lg:col-span-2 space-y-6">
           {recipe.coverImage && (
             <img
-              src={recipe.coverImage}
+              src={getImagePath(recipe.coverImage)}
               alt={recipe.title}
               className="w-full h-64 md:h-96 object-cover rounded-lg"
             />

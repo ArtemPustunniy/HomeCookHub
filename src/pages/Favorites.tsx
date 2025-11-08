@@ -3,6 +3,7 @@ import { useUser } from '@/contexts/UserContext'
 import { getFavorites, removeFromFavorites } from '@/services/favoritesService'
 import { getAllRecipes } from '@/services/recipeService'
 import { type Recipe, DifficultyLevel } from '@/types'
+import { getImagePath } from '@/lib/imagePath'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -86,7 +87,7 @@ function FavoriteRecipeCard({
       <Link to={`/recipes/${recipe.id}`}>
         {recipe.coverImage ? (
           <img
-            src={recipe.coverImage}
+            src={getImagePath(recipe.coverImage)}
             alt={recipe.title}
             className="w-full h-48 object-cover"
           />

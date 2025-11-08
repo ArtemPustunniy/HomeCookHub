@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { useUser } from '@/contexts/UserContext'
 import { getAllRecipes } from '@/services/recipeService'
 import { type Recipe, DifficultyLevel, RecipeTag } from '@/types'
+import { getImagePath } from '@/lib/imagePath'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -174,7 +175,7 @@ function RecipeCard({ recipe }: { recipe: Recipe }) {
       <Link to={`/recipes/${recipe.id}`}>
         {recipe.coverImage ? (
           <img
-            src={recipe.coverImage}
+            src={getImagePath(recipe.coverImage)}
             alt={recipe.title}
             className="w-full h-48 object-cover"
           />

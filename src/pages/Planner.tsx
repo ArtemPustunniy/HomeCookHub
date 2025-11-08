@@ -8,6 +8,7 @@ import { getCurrentWeekPlanner, moveRecipe, clearDay, clearWeek, addRecipeToDay 
 import { getAllRecipes } from '@/services/recipeService'
 import { generateShoppingListFromPlanner } from '@/services/shoppingListService'
 import { type Recipe } from '@/types'
+import { getImagePath } from '@/lib/imagePath'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Select } from '@/components/ui/select'
@@ -86,7 +87,7 @@ function SortableRecipeItem({ recipe, dayIndex }: { recipe: Recipe; dayIndex: nu
       </div>
       {recipe.coverImage ? (
         <img
-          src={recipe.coverImage}
+          src={getImagePath(recipe.coverImage)}
           alt={recipe.title}
           className="w-12 h-12 object-cover rounded"
         />
@@ -237,7 +238,7 @@ function RecipeCard({
       <Link to={`/recipes/${recipe.id}`}>
         {recipe.coverImage ? (
           <img
-            src={recipe.coverImage}
+            src={getImagePath(recipe.coverImage)}
             alt={recipe.title}
             className="w-full h-32 object-cover"
           />
