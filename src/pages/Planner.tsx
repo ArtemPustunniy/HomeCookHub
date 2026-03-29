@@ -112,7 +112,7 @@ function SortableRecipeItem({ recipe, dayIndex }: { recipe: Recipe; dayIndex: nu
 export function Planner() {
   const navigate = useNavigate()
   const { data: planner, isLoading: plannerLoading } = useCurrentWeekPlanner()
-  const { data: allRecipes = [], isLoading: recipesLoading } = useRecipes()
+  const { data: allRecipes = [] } = useRecipes()
   const moveRecipeMutation = useMoveRecipe()
   const clearDayMutation = useClearDay()
   const clearWeekMutation = useClearWeek()
@@ -226,7 +226,6 @@ export function Planner() {
               <RecipeCard
                 key={recipe.id}
                 recipe={recipe}
-                planner={planner}
                 onAddToDay={(dayIndex) =>
                   addRecipeToDayMutation.mutate({
                     weekStart: planner.weekStart,
@@ -245,11 +244,9 @@ export function Planner() {
 
 function RecipeCard({
   recipe,
-  planner,
   onAddToDay,
 }: {
   recipe: Recipe
-  planner: { weekStart: string; days: { date: string; recipeIds: string[] }[] }
   onAddToDay: (dayIndex: number) => void
 }) {
   const handleAddToDay = (dayIndex: number) => {

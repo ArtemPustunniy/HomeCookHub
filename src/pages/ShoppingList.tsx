@@ -2,22 +2,23 @@ import { useState } from 'react'
 import {
   useShoppingList,
   useAddShoppingListItem,
-  useUpdateShoppingListItem,
   useDeleteShoppingListItem,
   useTogglePurchased,
   useClearShoppingList,
 } from '@/hooks/useShoppingList'
-import { type ShoppingListItem } from '@/types'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Trash2, ShoppingCart, Plus, CheckCircle2, Circle } from 'lucide-react'
 
-function Checkbox({ checked, onCheckedChange, ...props }: {
+function Checkbox({
+  checked,
+  onCheckedChange,
+  ...props
+}: {
   checked: boolean
   onCheckedChange: (checked: boolean) => void
-  [key: string]: unknown
-}) {
+} & Record<string, unknown>) {
   return (
     <button
       type="button"
@@ -42,7 +43,6 @@ export function ShoppingList() {
 
   const addItemMutation = useAddShoppingListItem()
   const toggleMutation = useTogglePurchased()
-  const updateMutation = useUpdateShoppingListItem()
   const deleteMutation = useDeleteShoppingListItem()
   const clearMutation = useClearShoppingList()
 
@@ -67,10 +67,6 @@ export function ShoppingList() {
 
   const handleTogglePurchased = (itemId: string) => {
     toggleMutation.mutate(itemId)
-  }
-
-  const handleUpdateItem = (itemId: string, updates: Partial<ShoppingListItem>) => {
-    updateMutation.mutate({ itemId, updates })
   }
 
   const handleDeleteItem = (itemId: string) => {

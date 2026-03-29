@@ -1,4 +1,4 @@
-import { Link, useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import { useUser } from '@/contexts/UserContext'
 import { useFavorites, useRemoveFromFavorites } from '@/hooks/useFavorites'
 import { useRecipes } from '@/hooks/useRecipes'
@@ -16,8 +16,10 @@ const difficultyLabels: Record<DifficultyLevel, string> = {
 }
 
 export function Favorites() {
-  const navigate = useNavigate()
   const { user } = useUser()
+  const { data: favorites, isLoading: favLoading } = useFavorites(user?.id)
+  const { data: allRecipes = [], isLoading: recipesLoading } = useRecipes()
+  const removeMutation = useRemoveFromFavorites()
 
   if (!user) {
     return (
@@ -29,10 +31,6 @@ export function Favorites() {
       </div>
     )
   }
-
-  const { data: favorites, isLoading: favLoading } = useFavorites(user.id)
-  const { data: allRecipes = [], isLoading: recipesLoading } = useRecipes()
-  const removeMutation = useRemoveFromFavorites()
 
   const favoriteRecipes = favorites
     ? allRecipes.filter((recipe) => favorites.recipeIds.includes(recipe.id))
