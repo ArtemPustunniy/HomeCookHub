@@ -1,5 +1,6 @@
 import { Router } from 'express'
 import { z } from 'zod'
+import type { Comment as DbComment, Prisma, Rating, Recipe } from '@prisma/client'
 import { prisma } from '../db.js'
 import {
   RecipeFormSchema,
@@ -10,27 +11,32 @@ import { requireAuth, type AuthenticatedRequest } from '../middleware/auth.js'
 
 const router = Router()
 
-function toApiRecipe(db: any & { comments?: any[]; ratings?: any[] }): ApiRecipe {
+type RecipeDbInput = Recipe & {
+  comments?: DbComment[]
+  ratings?: Rating[]
+}
+
+function toApiRecipe(db: RecipeDbInput): ApiRecipe {
   return {
     id: db.id,
     title: db.title,
     cookingTime: db.cookingTime,
-    difficulty: db.difficulty,
+    difficulty: db.difficulty as ApiRecipe['difficulty'],
     cuisine: db.cuisine,
-    tags: db.tags ?? [],
+    tags: (db.tags ?? []) as ApiRecipe['tags'],
     coverImage: db.coverImage ?? '',
-    ingredients: db.ingredients ?? [],
+    ingredients: (db.ingredients as ApiRecipe['ingredients']) ?? [],
     instructions: db.instructions ?? [],
-    nutrition: db.nutrition ?? undefined,
+    nutrition: (db.nutrition as ApiRecipe['nutrition']) ?? undefined,
     authorId: db.authorId,
     authorName: db.authorName,
     averageRating: db.averageRating ?? 0,
     ratingCount: db.ratingCount ?? 0,
-    ratings: (db.ratings ?? []).map((r: any) => ({
+    ratings: (db.ratings ?? []).map((r: Rating) => ({
       userId: r.userId,
       rating: r.rating,
     })),
-    comments: (db.comments ?? []).map((c: any) => ({
+    comments: (db.comments ?? []).map((c: DbComment) => ({
       id: c.id,
       recipeId: c.recipeId,
       authorId: c.authorId,
@@ -54,7 +60,7 @@ router.get('/', async (req, res) => {
   const page = Math.max(1, Number(req.query.page) || 1)
   const limit = Math.min(50, Math.max(1, Number(req.query.limit) || 12))
 
-  const where: any = {}
+  const where: Prisma.RecipeWhereInput = {}
   if (search) {
     where.title = { contains: search, mode: 'insensitive' }
   }
@@ -81,29 +87,7 @@ router.get('/', async (req, res) => {
     }),
   ])
 
-  const recipes = items.map((r) =>
-    // список можно вернуть без ratings/comments
-    ({
-      id: r.id,
-      title: r.title,
-      cookingTime: r.cookingTime,
-      difficulty: r.difficulty,
-      cuisine: r.cuisine,
-      tags: r.tags ?? [],
-      coverImage: r.coverImage ?? '',
-      ingredients: r.ingredients ?? [],
-      instructions: r.instructions ?? [],
-      nutrition: r.nutrition ?? undefined,
-      authorId: r.authorId,
-      authorName: r.authorName,
-      averageRating: r.averageRating ?? 0,
-      ratingCount: r.ratingCount ?? 0,
-      ratings: [],
-      comments: [],
-      createdAt: r.createdAt.toISOString(),
-      updatedAt: r.updatedAt.toISOString(),
-    } satisfies ApiRecipe),
-  )
+  const recipes = items.map((r) => toApiRecipe({ ...r, ratings: [], comments: [] }))
 
   res.json({ recipes, total })
 })

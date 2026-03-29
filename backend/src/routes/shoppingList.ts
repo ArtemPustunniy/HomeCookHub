@@ -1,12 +1,15 @@
 import { Router } from 'express'
 import { z } from 'zod'
+import type { Prisma } from '@prisma/client'
 import { prisma } from '../db.js'
 import type { ShoppingList, ShoppingListItem } from '../types.js'
 import { requireAuth, type AuthenticatedRequest } from '../middleware/auth.js'
 
 const router = Router()
 
-function toApiList(db: any & { items: any[] }): ShoppingList {
+type ShoppingListWithItems = Prisma.ShoppingListGetPayload<{ include: { items: true } }>
+
+function toApiList(db: ShoppingListWithItems): ShoppingList {
   return {
     id: db.id,
     items: db.items.map(
@@ -69,8 +72,9 @@ router.post('/generate', requireAuth, async (req: AuthenticatedRequest, res) => 
     }
   >()
 
+  type IngredientJson = { name: string; amount?: number | null; unit?: string | null }
   for (const recipe of recipes) {
-    const ingredients = (recipe.ingredients ?? []) as any[]
+    const ingredients = (Array.isArray(recipe.ingredients) ? recipe.ingredients : []) as IngredientJson[]
     for (const ing of ingredients) {
       const key = `${String(ing.name).toLowerCase()}_${ing.unit ?? ''}`
       const existing = byKey.get(key)
