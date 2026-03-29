@@ -39,7 +39,7 @@ export function useCreateRecipe() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: (recipeForm: RecipeForm) => Promise.resolve(createRecipe(recipeForm)),
+    mutationFn: (recipeForm: RecipeForm) => createRecipe(recipeForm),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: recipeKeys.lists() })
     },
@@ -50,8 +50,7 @@ export function useUpdateRecipe() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: ({ id, recipeForm }: { id: string; recipeForm: RecipeForm }) =>
-      Promise.resolve(updateRecipe(id, recipeForm)),
+    mutationFn: ({ id, recipeForm }: { id: string; recipeForm: RecipeForm }) => updateRecipe(id, recipeForm),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: recipeKeys.lists() })
       queryClient.invalidateQueries({ queryKey: recipeKeys.detail(variables.id) })
@@ -63,7 +62,7 @@ export function useDeleteRecipe() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: (id: string) => Promise.resolve(deleteRecipe(id)),
+    mutationFn: (id: string) => deleteRecipe(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: recipeKeys.lists() })
     },
@@ -80,7 +79,7 @@ export function useAddComment() {
     }: {
       recipeId: string
       comment: Omit<Comment, 'id' | 'createdAt' | 'updatedAt'>
-    }) => Promise.resolve(addComment(recipeId, comment)),
+    }) => addComment(recipeId, comment),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: recipeKeys.detail(variables.recipeId) })
     },
@@ -99,7 +98,7 @@ export function useDeleteComment() {
       recipeId: string
       commentId: string
       authorId: string
-    }) => Promise.resolve(deleteComment(recipeId, commentId, authorId)),
+    }) => deleteComment(recipeId, commentId, authorId),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: recipeKeys.detail(variables.recipeId) })
     },
@@ -118,7 +117,7 @@ export function useSetRating() {
       recipeId: string
       userId: string
       rating: number
-    }) => Promise.resolve(setRating(recipeId, userId, rating)),
+    }) => setRating(recipeId, userId, rating),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: recipeKeys.detail(variables.recipeId) })
       queryClient.invalidateQueries({ queryKey: recipeKeys.lists() })

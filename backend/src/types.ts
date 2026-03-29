@@ -4,24 +4,14 @@ export const DifficultyLevel = z.enum(['easy', 'medium', 'hard'])
 export type DifficultyLevel = z.infer<typeof DifficultyLevel>
 
 export const RecipeTag = z.enum([
-  'vegan',
-  'vegetarian',
-  'gluten-free',
-  'dairy-free',
-  'spicy',
-  'quick',
-  'healthy',
-  'dessert',
-  'breakfast',
-  'lunch',
-  'dinner',
-  'snack',
+  'vegan', 'vegetarian', 'gluten-free', 'dairy-free', 'spicy', 'quick',
+  'healthy', 'dessert', 'breakfast', 'lunch', 'dinner', 'snack',
 ])
 export type RecipeTag = z.infer<typeof RecipeTag>
 
 export const IngredientSchema = z.object({
   id: z.string(),
-  name: z.string().min(1, 'Название ингредиента обязательно'),
+  name: z.string().min(1),
   amount: z.number().positive().optional(),
   unit: z.string().optional(),
 })
@@ -58,7 +48,7 @@ export const CommentSchema = z.object({
   recipeId: z.string(),
   authorId: z.string(),
   authorName: z.string(),
-  content: z.string().min(1, 'Комментарий не может быть пустым'),
+  content: z.string().min(1),
   createdAt: z.string(),
   updatedAt: z.string().optional(),
 })
@@ -66,14 +56,14 @@ export type Comment = z.infer<typeof CommentSchema>
 
 export const RecipeSchema = z.object({
   id: z.string(),
-  title: z.string().min(1, 'Название рецепта обязательно'),
-  cookingTime: z.number().positive('Время приготовления должно быть положительным'),
+  title: z.string().min(1),
+  cookingTime: z.number().positive(),
   difficulty: DifficultyLevel,
-  cuisine: z.string().min(1, 'Кухня обязательна'),
+  cuisine: z.string().min(1),
   tags: z.array(RecipeTag).default([]),
-  coverImage: z.string().url().optional().or(z.literal('')),
-  ingredients: z.array(IngredientSchema).min(1, 'Добавьте хотя бы один ингредиент'),
-  instructions: z.array(z.string()).min(1, 'Добавьте хотя бы один шаг'),
+  coverImage: z.string().optional().or(z.literal('')),
+  ingredients: z.array(IngredientSchema).min(1),
+  instructions: z.array(z.string()).min(1),
   nutrition: NutritionSchema.optional(),
   authorId: z.string(),
   authorName: z.string(),
@@ -87,31 +77,26 @@ export const RecipeSchema = z.object({
 export type Recipe = z.infer<typeof RecipeSchema>
 
 export const RecipeFormSchema = RecipeSchema.omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
-  averageRating: true,
-  ratingCount: true,
-  ratings: true,
-  comments: true,
+  id: true, createdAt: true, updatedAt: true,
+  averageRating: true, ratingCount: true, ratings: true, comments: true,
 })
 export type RecipeForm = z.infer<typeof RecipeFormSchema>
 
 export const PlannerDaySchema = z.object({
-  date: z.string(), // ISO date string
+  date: z.string(),
   recipeIds: z.array(z.string()).default([]),
 })
 export type PlannerDay = z.infer<typeof PlannerDaySchema>
 
 export const PlannerSchema = z.object({
-  weekStart: z.string(), // ISO date string (Monday)
+  weekStart: z.string(),
   days: z.array(PlannerDaySchema).length(7),
 })
 export type Planner = z.infer<typeof PlannerSchema>
 
 export const ShoppingListItemSchema = z.object({
   id: z.string(),
-  name: z.string().min(1, 'Название продукта обязательно'),
+  name: z.string().min(1),
   amount: z.number().optional(),
   unit: z.string().optional(),
   purchased: z.boolean().default(false),
@@ -132,3 +117,14 @@ export const FavoritesSchema = z.object({
 })
 export type Favorites = z.infer<typeof FavoritesSchema>
 
+export interface User {
+  id: string
+  name: string
+  role?: string
+}
+
+export interface AuthPayload {
+  userId: string
+  name: string
+  role?: string
+}

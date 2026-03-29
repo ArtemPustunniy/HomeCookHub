@@ -1,0 +1,123 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id       String  @id @default(cuid())
+  name     String
+  email    String? @unique
+  password String?
+  role     String  @default("user") // 'user' | 'admin' и т.д.
+
+  recipes       Recipe[]
+  comments      Comment[]
+  ratings       Rating[]
+  planners      Planner[]
+  shoppingList  ShoppingList?
+  favorites     Favorites?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Recipe {
+  id           String   @id @default(cuid())
+  title        String
+  cookingTime  Int
+  difficulty   String
+  cuisine      String
+  tags         String[]
+  coverImage   String?
+  ingredients  Json
+  instructions String[]
+  nutrition    Json?
+
+  authorId   String
+  authorName String
+  author     User     @relation(fields: [authorId], references: [id])
+
+  averageRating Float @default(0)
+  ratingCount   Int   @default(0)
+
+  ratings  Rating[]
+  comments Comment[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Comment {
+  id        String   @id @default(cuid())
+  recipeId  String
+  recipe    Recipe   @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+  authorId  String
+  author    User     @relation(fields: [authorId], references: [id])
+  authorName String
+  content   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime?
+}
+
+model Rating {
+  id       String @id @default(cuid())
+  recipeId String
+  recipe   Recipe @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+  userId   String
+  user     User   @relation(fields: [userId], references: [id])
+  rating   Int
+
+  @@unique([recipeId, userId])
+}
+
+model Planner {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  weekStart String   // ISO date (YYYY-MM-DD) понедельника
+  days      PlannerDay[]
+
+  @@unique([userId, weekStart])
+}
+
+model PlannerDay {
+  id        String   @id @default(cuid())
+  plannerId String
+  planner   Planner  @relation(fields: [plannerId], references: [id], onDelete: Cascade)
+  dayIndex  Int      // 0..6
+  date      String   // ISO date
+  recipeIds String[]
+
+  @@unique([plannerId, dayIndex])
+}
+
+model ShoppingList {
+  id        String            @id @default(cuid())
+  userId    String            @unique
+  user      User              @relation(fields: [userId], references: [id])
+  items     ShoppingListItem[]
+  createdAt DateTime          @default(now())
+  updatedAt DateTime          @updatedAt
+}
+
+model ShoppingListItem {
+  id        String       @id @default(cuid())
+  listId    String
+  list      ShoppingList @relation(fields: [listId], references: [id], onDelete: Cascade)
+  name      String
+  amount    Float?
+  unit      String?
+  purchased Boolean      @default(false)
+}
+
+model Favorites {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id])
+  recipeIds String[]
+}
+

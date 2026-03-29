@@ -4,6 +4,8 @@ import { useForm, useFieldArray } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useUser } from '@/contexts/UserContext'
 import { useRecipe, useCreateRecipe, useUpdateRecipe, useDeleteRecipe } from '@/hooks/useRecipes'
+import { getStorageItem } from '@/lib/storage'
+import { STORAGE_KEYS } from '@/lib/storage'
 import { RecipeFormSchema, type RecipeForm, DifficultyLevel, RecipeTag } from '@/types'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -52,9 +54,9 @@ export function RecipeForm() {
   const { id } = useParams<{ id: string }>()
   const { user } = useUser()
   const navigate = useNavigate()
-  const isEdit = !!id
+  const isEdit = !!id && id !== 'new'
 
-  const { data: recipe } = useRecipe(id)
+  const { data: recipe } = useRecipe(isEdit ? id : undefined)
   const createMutation = useCreateRecipe()
   const updateMutation = useUpdateRecipe()
   const deleteMutation = useDeleteRecipe()
@@ -143,13 +145,40 @@ export function RecipeForm() {
     )
   }
 
-  const onSubmit = (data: RecipeForm) => {
-    if (isEdit && id) {
-      updateMutation.mutate({ id, recipeForm: data })
-    } else {
-      createMutation.mutate(data)
+  const onSubmit = async (data: RecipeForm) => {
+    try {
+      const token = getStorageItem<string | null>(STORAGE_KEYS.AUTH_TOKEN, null)
+      const debugInfo = `id=${id} isEdit=${isEdit} hasToken=${!!token}`
+      console.log('[RecipeForm onSubmit]', debugInfo)
+      if (isEdit) {
+        if (!id) {
+          alert('ID рецепта не найден. ' + debugInfo)
+          return
+        }
+        await updateMutation.mutateAsync({ id, recipeForm: data })
+      } else {
+        await createMutation.mutateAsync(data)
+      }
+      navigate('/recipes')
+    } catch (e) {
+      console.error('Recipe save error:', e)
+      const msg = e instanceof Error ? e.message : 'Ошибка сохранения рецепта'
+      const full = (e as any)?.graphqlResponse ? `\n\nОтвет сервера:\n${(e as any).graphqlResponse}` : ''
+      alert(msg + full)
     }
-    navigate('/recipes')
+  }
+
+  const onValidationError = (err: Record<string, unknown>) => {
+    console.error('[RecipeForm] Validation failed:', err)
+    const flatten = (obj: unknown, prefix = ''): string[] => {
+      if (obj && typeof obj === 'object' && 'message' in obj && typeof (obj as { message?: string }).message === 'string')
+        return [`${prefix}: ${(obj as { message: string }).message}`]
+      if (obj && typeof obj === 'object' && !Array.isArray(obj))
+        return Object.entries(obj).flatMap(([k, v]) => flatten(v, prefix ? `${prefix}.${k}` : k))
+      return []
+    }
+    const msg = flatten(err).join('; ') || JSON.stringify(err)
+    alert('Ошибка валидации формы: ' + msg)
   }
 
   const handleDelete = () => {
@@ -189,7 +218,7 @@ export function RecipeForm() {
           )}
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+          <form onSubmit={handleSubmit(onSubmit, onValidationError)} className="space-y-6">
             <FormItem>
               <FormLabel>Название *</FormLabel>
               <Input {...register('title')} />

@@ -41,7 +41,7 @@ export function useAddRecipeToDay() {
       weekStart: string
       dayIndex: number
       recipeId: string
-    }) => Promise.resolve(addRecipeToDay(weekStart, dayIndex, recipeId)),
+    }) => addRecipeToDay(weekStart, dayIndex, recipeId),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: plannerKeys.current() })
       queryClient.invalidateQueries({ queryKey: plannerKeys.week(variables.weekStart) })
@@ -61,7 +61,7 @@ export function useRemoveRecipeFromDay() {
       weekStart: string
       dayIndex: number
       recipeId: string
-    }) => Promise.resolve(removeRecipeFromDay(weekStart, dayIndex, recipeId)),
+    }) => removeRecipeFromDay(weekStart, dayIndex, recipeId),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: plannerKeys.current() })
       queryClient.invalidateQueries({ queryKey: plannerKeys.week(variables.weekStart) })
@@ -83,7 +83,7 @@ export function useMoveRecipe() {
       fromDayIndex: number
       toDayIndex: number
       recipeId: string
-    }) => Promise.resolve(moveRecipe(weekStart, fromDayIndex, toDayIndex, recipeId)),
+    }) => moveRecipe(weekStart, fromDayIndex, toDayIndex, recipeId),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: plannerKeys.current() })
       queryClient.invalidateQueries({ queryKey: plannerKeys.week(variables.weekStart) })
@@ -96,7 +96,7 @@ export function useClearDay() {
 
   return useMutation({
     mutationFn: ({ weekStart, dayIndex }: { weekStart: string; dayIndex: number }) =>
-      Promise.resolve(clearDay(weekStart, dayIndex)),
+      clearDay(weekStart, dayIndex),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: plannerKeys.current() })
       queryClient.invalidateQueries({ queryKey: plannerKeys.week(variables.weekStart) })
@@ -108,7 +108,7 @@ export function useClearWeek() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: (weekStart: string) => Promise.resolve(clearWeek(weekStart)),
+    mutationFn: (weekStart: string) => clearWeek(weekStart),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: plannerKeys.current() })
       queryClient.invalidateQueries({ queryKey: plannerKeys.week(variables) })

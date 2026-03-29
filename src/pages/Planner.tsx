@@ -1,12 +1,18 @@
-import { useState, useMemo } from 'react'
+import { useMemo } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { DndContext, type DragEndEvent, closestCenter, useDroppable } from '@dnd-kit/core'
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import { getCurrentWeekPlanner, moveRecipe, clearDay, clearWeek, addRecipeToDay } from '@/services/plannerService'
-import { getAllRecipes } from '@/services/recipeService'
-import { generateShoppingListFromPlanner } from '@/services/shoppingListService'
+import {
+  useCurrentWeekPlanner,
+  useMoveRecipe,
+  useClearDay,
+  useClearWeek,
+  useAddRecipeToDay,
+} from '@/hooks/usePlanner'
+import { useRecipes } from '@/hooks/useRecipes'
+import { useGenerateShoppingListFromPlanner } from '@/hooks/useShoppingList'
 import { type Recipe } from '@/types'
 import { getImagePath } from '@/lib/imagePath'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -105,13 +111,27 @@ function SortableRecipeItem({ recipe, dayIndex }: { recipe: Recipe; dayIndex: nu
 
 export function Planner() {
   const navigate = useNavigate()
-  const [planner, setPlanner] = useState(getCurrentWeekPlanner())
-  const allRecipes = getAllRecipes()
+  const { data: planner, isLoading: plannerLoading } = useCurrentWeekPlanner()
+  const { data: allRecipes = [], isLoading: recipesLoading } = useRecipes()
+  const moveRecipeMutation = useMoveRecipe()
+  const clearDayMutation = useClearDay()
+  const clearWeekMutation = useClearWeek()
+  const addRecipeToDayMutation = useAddRecipeToDay()
+  const generateShoppingListMutation = useGenerateShoppingListFromPlanner()
+
   const recipesMap = useMemo(() => {
     const map = new Map<string, Recipe>()
     allRecipes.forEach((r) => map.set(r.id, r))
     return map
   }, [allRecipes])
+
+  if (plannerLoading || !planner) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <p className="text-muted-foreground">Загрузка...</p>
+      </div>
+    )
+  }
 
   const weekStartDate = parseISO(planner.weekStart)
   const weekEndDate = addDays(weekStartDate, 6)
@@ -130,28 +150,24 @@ export function Planner() {
     const recipeId = active.id as string
 
     if (!isNaN(toDayIndex) && fromDayIndex !== toDayIndex) {
-      const updated = moveRecipe(planner.weekStart, fromDayIndex, toDayIndex, recipeId)
-      if (updated) {
-        setPlanner(updated)
-      }
+      moveRecipeMutation.mutate({
+        weekStart: planner.weekStart,
+        fromDayIndex,
+        toDayIndex,
+        recipeId,
+      })
     }
   }
 
   const handleClearDay = (dayIndex: number) => {
     if (confirm('Очистить этот день?')) {
-      const updated = clearDay(planner.weekStart, dayIndex)
-      if (updated) {
-        setPlanner(updated)
-      }
+      clearDayMutation.mutate({ weekStart: planner.weekStart, dayIndex })
     }
   }
 
   const handleClearWeek = () => {
     if (confirm('Очистить всю неделю?')) {
-      const updated = clearWeek(planner.weekStart)
-      if (updated) {
-        setPlanner(updated)
-      }
+      clearWeekMutation.mutate(planner.weekStart)
     }
   }
 
@@ -161,8 +177,7 @@ export function Planner() {
       alert('Добавьте рецепты в планировщик')
       return
     }
-    generateShoppingListFromPlanner(allRecipeIds)
-    navigate('/shopping-list')
+    generateShoppingListMutation.mutate(allRecipeIds, { onSuccess: () => navigate('/shopping-list') })
   }
 
   return (
@@ -208,7 +223,18 @@ export function Planner() {
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {allRecipes.map((recipe) => (
-              <RecipeCard key={recipe.id} recipe={recipe} planner={planner} setPlanner={setPlanner} />
+              <RecipeCard
+                key={recipe.id}
+                recipe={recipe}
+                planner={planner}
+                onAddToDay={(dayIndex) =>
+                  addRecipeToDayMutation.mutate({
+                    weekStart: planner.weekStart,
+                    dayIndex,
+                    recipeId: recipe.id,
+                  })
+                }
+              />
             ))}
           </div>
         </CardContent>
@@ -220,17 +246,14 @@ export function Planner() {
 function RecipeCard({
   recipe,
   planner,
-  setPlanner,
+  onAddToDay,
 }: {
   recipe: Recipe
-  planner: ReturnType<typeof getCurrentWeekPlanner>
-  setPlanner: (planner: ReturnType<typeof getCurrentWeekPlanner>) => void
+  planner: { weekStart: string; days: { date: string; recipeIds: string[] }[] }
+  onAddToDay: (dayIndex: number) => void
 }) {
   const handleAddToDay = (dayIndex: number) => {
-    const updated = addRecipeToDay(planner.weekStart, dayIndex, recipe.id)
-    if (updated) {
-      setPlanner(updated)
-    }
+    onAddToDay(dayIndex)
   }
 
   return (
@@ -255,10 +278,10 @@ function RecipeCard({
         <Select
           defaultValue=""
           onChange={(e) => {
-            const dayIndex = parseInt(e.target.value)
-            if (!isNaN(dayIndex)) {
+            const dayIndex = parseInt(e.target.value, 10)
+            if (!Number.isNaN(dayIndex)) {
               handleAddToDay(dayIndex)
-              e.target.value = ''
+              ;(e.target as HTMLSelectElement).value = ''
             }
           }}
           className="w-full"

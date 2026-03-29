@@ -1,7 +1,7 @@
 import { Link, useNavigate } from 'react-router-dom'
 import { useUser } from '@/contexts/UserContext'
-import { getFavorites, removeFromFavorites } from '@/services/favoritesService'
-import { getAllRecipes } from '@/services/recipeService'
+import { useFavorites, useRemoveFromFavorites } from '@/hooks/useFavorites'
+import { useRecipes } from '@/hooks/useRecipes'
 import { type Recipe, DifficultyLevel } from '@/types'
 import { getImagePath } from '@/lib/imagePath'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -30,15 +30,24 @@ export function Favorites() {
     )
   }
 
-  const favorites = getFavorites(user.id)
-  const allRecipes = getAllRecipes()
-  const favoriteRecipes = allRecipes.filter((recipe) =>
-    favorites.recipeIds.includes(recipe.id)
-  )
+  const { data: favorites, isLoading: favLoading } = useFavorites(user.id)
+  const { data: allRecipes = [], isLoading: recipesLoading } = useRecipes()
+  const removeMutation = useRemoveFromFavorites()
+
+  const favoriteRecipes = favorites
+    ? allRecipes.filter((recipe) => favorites.recipeIds.includes(recipe.id))
+    : []
 
   const handleRemoveFavorite = (recipeId: string) => {
-    removeFromFavorites(user.id, recipeId)
-    navigate(0)
+    removeMutation.mutate({ userId: user.id, recipeId })
+  }
+
+  if (favLoading || recipesLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <p className="text-muted-foreground">Загрузка...</p>
+      </div>
+    )
   }
 
   return (

@@ -5,6 +5,7 @@ export const STORAGE_KEYS = {
   FAVORITES: 'homecookhub_favorites',
   THEME: 'homecookhub_theme',
   CURRENT_USER: 'homecookhub_current_user',
+  AUTH_TOKEN: 'homecookhub_auth_token',
 } as const
 
 export function getStorageItem<T>(key: string, defaultValue: T): T {

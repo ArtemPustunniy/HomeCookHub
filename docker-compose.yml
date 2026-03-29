@@ -1,0 +1,19 @@
+version: "3.9"
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: homecookhub-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: homecook
+      POSTGRES_PASSWORD: homecook
+      POSTGRES_DB: homecookhub
+    ports:
+      - "5435:5432"
+    volumes:
+      - db-data-web:/var/lib/postgresql/data
+
+volumes:
+  db-data-web:
+

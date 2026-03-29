@@ -1,9 +1,10 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from 'react'
-import { STORAGE_KEYS, getStorageItem, setStorageItem } from '@/lib/storage'
+import { STORAGE_KEYS, getStorageItem, setStorageItem, removeStorageItem } from '@/lib/storage'
 
 interface User {
   id: string
   name: string
+  role?: string
 }
 
 interface UserContextType {
@@ -25,6 +26,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
       setStorageItem(STORAGE_KEYS.CURRENT_USER, newUser)
     } else {
       setStorageItem(STORAGE_KEYS.CURRENT_USER, null)
+      removeStorageItem(STORAGE_KEYS.AUTH_TOKEN)
     }
   }
 

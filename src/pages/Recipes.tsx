@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { useUser } from '@/contexts/UserContext'
-import { getAllRecipes } from '@/services/recipeService'
+import { useRecipes } from '@/hooks/useRecipes'
 import { type Recipe, DifficultyLevel, RecipeTag } from '@/types'
 import { getImagePath } from '@/lib/imagePath'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -25,7 +25,7 @@ const CUISINES = [
 
 export function Recipes() {
   const { user } = useUser()
-  const recipes = getAllRecipes()
+  const { data: recipes = [], isLoading } = useRecipes()
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCuisine, setSelectedCuisine] = useState<string>('all')
   const [selectedDifficulty, setSelectedDifficulty] = useState<string>('all')
@@ -57,6 +57,14 @@ export function Recipes() {
       return true
     })
   }, [recipes, searchQuery, selectedCuisine, selectedDifficulty, selectedTag, maxTime])
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <p className="text-muted-foreground">Загрузка...</p>
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-6">

@@ -40,8 +40,8 @@ function App() {
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Register />} />
                 <Route path="/recipes" element={<Recipes />} />
-                <Route path="/recipes/:id" element={<RecipeDetail />} />
                 <Route path="/recipes/new" element={<RecipeForm />} />
+                <Route path="/recipes/:id" element={<RecipeDetail />} />
                 <Route path="/recipes/:id/edit" element={<RecipeForm />} />
                 <Route path="/planner" element={<Planner />} />
                 <Route path="/shopping-list" element={<ShoppingList />} />

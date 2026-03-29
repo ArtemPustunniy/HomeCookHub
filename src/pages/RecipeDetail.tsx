@@ -1,8 +1,14 @@
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import { useState } from 'react'
 import { useUser } from '@/contexts/UserContext'
-import { getRecipeById, addComment, deleteComment, setRating, getUserRating } from '@/services/recipeService'
-import { isFavorite, toggleFavorite } from '@/services/favoritesService'
+import {
+  useRecipe,
+  useAddComment,
+  useDeleteComment,
+  useSetRating,
+  useUserRating,
+} from '@/hooks/useRecipes'
+import { useFavorites, useToggleFavorite } from '@/hooks/useFavorites'
 import { type Recipe, DifficultyLevel } from '@/types'
 import { getImagePath } from '@/lib/imagePath'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -20,8 +26,25 @@ const difficultyLabels: Record<DifficultyLevel, string> = {
 
 export function RecipeDetail() {
   const { id } = useParams<{ id: string }>()
-  const recipe = id ? getRecipeById(id) : null
+  const { data: recipe, isLoading, isError, error } = useRecipe(id)
 
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <p className="text-muted-foreground">Загрузка...</p>
+      </div>
+    )
+  }
+  if (isError) {
+    return (
+      <div className="text-center py-12">
+        <p className="text-destructive">Ошибка загрузки: {error?.message ?? 'Неизвестная ошибка'}</p>
+        <Button asChild className="mt-4">
+          <Link to="/recipes">Вернуться к рецептам</Link>
+        </Button>
+      </div>
+    )
+  }
   if (!recipe) {
     return (
       <div className="text-center py-12">
@@ -40,37 +63,40 @@ function RecipeDetailContent({ recipe }: { recipe: Recipe }) {
   const navigate = useNavigate()
   const { user } = useUser()
   const [commentText, setCommentText] = useState('')
-  const [userRating, setUserRatingState] = useState<number | null>(
-    user ? getUserRating(recipe.id, user.id) : null
-  )
-  const [isFav, setIsFav] = useState(user ? isFavorite(user.id, recipe.id) : false)
+  const { data: userRating } = useUserRating(recipe.id, user?.id)
+  const { data: favorites } = useFavorites(user?.id)
+  const isFav = Boolean(user && favorites?.recipeIds.includes(recipe.id))
+  const addCommentMutation = useAddComment()
+  const deleteCommentMutation = useDeleteComment()
+  const setRatingMutation = useSetRating()
+  const toggleFavoriteMutation = useToggleFavorite()
 
   const handleAddComment = () => {
     if (!user || !commentText.trim()) return
-
-    addComment(recipe.id, {
-      recipeId: recipe.id,
-      authorId: user.id,
-      authorName: user.name,
-      content: commentText.trim(),
-    })
-    setCommentText('')
-    navigate(0)
+    addCommentMutation.mutate(
+      {
+        recipeId: recipe.id,
+        comment: {
+          recipeId: recipe.id,
+          authorId: user.id,
+          authorName: user.name,
+          content: commentText.trim(),
+        },
+      },
+      { onSuccess: () => setCommentText('') },
+    )
   }
 
   const handleDeleteComment = (commentId: string) => {
     if (!user) return
     if (confirm('Удалить комментарий?')) {
-      deleteComment(recipe.id, commentId, user.id)
-      navigate(0)
+      deleteCommentMutation.mutate({ recipeId: recipe.id, commentId, authorId: user.id })
     }
   }
 
   const handleRating = (rating: number) => {
     if (!user) return
-    setRating(recipe.id, user.id, rating)
-    setUserRatingState(rating)
-    navigate(0)
+    setRatingMutation.mutate({ recipeId: recipe.id, userId: user.id, rating })
   }
 
   const handleToggleFavorite = () => {
@@ -78,8 +104,7 @@ function RecipeDetailContent({ recipe }: { recipe: Recipe }) {
       navigate('/login')
       return
     }
-    toggleFavorite(user.id, recipe.id)
-    setIsFav(!isFav)
+    toggleFavoriteMutation.mutate({ userId: user.id, recipeId: recipe.id })
   }
 
   const isOwner = user && recipe.authorId === user.id

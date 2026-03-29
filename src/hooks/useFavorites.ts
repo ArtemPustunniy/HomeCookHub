@@ -19,7 +19,7 @@ export function useFavorites(userId: string | undefined) {
 export function useIsFavorite(userId: string | undefined, recipeId: string | undefined) {
   return useQuery({
     queryKey: favoritesKeys.check(userId || '', recipeId || ''),
-    queryFn: () => (userId && recipeId ? isFavorite(userId, recipeId) : false),
+    queryFn: () => (userId && recipeId ? isFavorite(userId, recipeId) : Promise.resolve(false)),
     enabled: !!userId && !!recipeId,
   })
 }
@@ -28,8 +28,7 @@ export function useAddToFavorites() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: ({ userId, recipeId }: { userId: string; recipeId: string }) =>
-      Promise.resolve(addToFavorites(userId, recipeId)),
+    mutationFn: ({ userId, recipeId }: { userId: string; recipeId: string }) => addToFavorites(userId, recipeId),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: favoritesKeys.user(variables.userId) })
       queryClient.invalidateQueries({ queryKey: favoritesKeys.check(variables.userId, variables.recipeId) })
@@ -42,8 +41,7 @@ export function useRemoveFromFavorites() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: ({ userId, recipeId }: { userId: string; recipeId: string }) =>
-      Promise.resolve(removeFromFavorites(userId, recipeId)),
+    mutationFn: ({ userId, recipeId }: { userId: string; recipeId: string }) => removeFromFavorites(userId, recipeId),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: favoritesKeys.user(variables.userId) })
       queryClient.invalidateQueries({ queryKey: favoritesKeys.check(variables.userId, variables.recipeId) })
@@ -56,8 +54,7 @@ export function useToggleFavorite() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: ({ userId, recipeId }: { userId: string; recipeId: string }) =>
-      Promise.resolve(toggleFavorite(userId, recipeId)),
+    mutationFn: ({ userId, recipeId }: { userId: string; recipeId: string }) => toggleFavorite(userId, recipeId),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: favoritesKeys.user(variables.userId) })
       queryClient.invalidateQueries({ queryKey: favoritesKeys.check(variables.userId, variables.recipeId) })
