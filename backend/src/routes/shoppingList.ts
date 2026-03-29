@@ -89,8 +89,8 @@ router.post('/generate', requireAuth, async (req: AuthenticatedRequest, res) => 
       } else {
         byKey.set(key, {
           name: ing.name,
-          amount: ing.amount,
-          unit: ing.unit,
+          amount: ing.amount ?? undefined,
+          unit: ing.unit ?? undefined,
         })
       }
     }
