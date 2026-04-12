@@ -778,6 +778,10 @@ query MyShoppingList {
 
 #### 8. Создать рецепт
 
+**Почему бывает `Variable "$recipeInput" ... was not provided`:** в документе объявлена переменная **`$recipeInput`**, но в HTTP-теле нет значения для неё. В Postman во вкладке **GraphQL** нужно заполнить панель **GRAPHQL VARIABLES** JSON-ом (вариант A). Если удобнее не использовать variables вообще — вариант B (всё в одном QUERY).
+
+**Вариант A — переменная `recipeInput` (как во фронте)**
+
 **QUERY**
 
 ```graphql
@@ -812,7 +816,7 @@ mutation CreateRecipe($recipeInput: RecipeFormInputModel!) {
 }
 ```
 
-**GRAPHQL VARIABLES**
+**GRAPHQL VARIABLES** (нельзя оставлять `{}`, если в QUERY есть `$recipeInput`)
 
 ```json
 {
@@ -834,6 +838,38 @@ mutation CreateRecipe($recipeInput: RecipeFormInputModel!) {
       "fat": 2,
       "fiber": 1
     }
+  }
+}
+```
+
+**Вариант B — без variables (инлайн-объект `input`)**  
+Подходит, если в Postman не хочешь заполнять панель variables: **GRAPHQL VARIABLES** можно оставить `{}`.
+
+**QUERY**
+
+```graphql
+mutation CreateRecipeInline {
+  createRecipe(
+    input: {
+      title: "Суп из Postman",
+      cookingTime: 45,
+      difficulty: "easy",
+      cuisine: "Домашняя",
+      tags: ["quick", "lunch"],
+      coverImage: "",
+      ingredients: [{ id: "ing-post-1", name: "Вода", amount: 2, unit: "л" }],
+      instructions: ["Вскипятить", "Посолить"],
+      nutrition: { calories: 100, protein: 5, carbs: 10, fat: 2, fiber: 1 }
+    }
+  ) {
+    id
+    title
+    cookingTime
+    difficulty
+    cuisine
+    authorId
+    authorName
+    createdAt
   }
 }
 ```

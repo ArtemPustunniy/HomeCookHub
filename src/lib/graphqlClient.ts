@@ -55,11 +55,15 @@ export async function graphqlRequest<T = unknown>(
 
   const gqlErrors = json.errors as Array<{ message?: string }> | undefined
   if (gqlErrors?.length) {
-    const msg =
+    let msg =
       gqlErrors
         .map((e) => e.message)
         .filter((m): m is string => Boolean(m))
         .join('; ') || 'GraphQL error'
+    if (/was not provided/i.test(msg)) {
+      msg +=
+        ' Для мутаций с $переменными передайте объект variables (в Postman — панель GRAPHQL VARIABLES) или используйте инлайн-аргументы без $. См. API_REQUESTS.md, § GraphQL «Создать рецепт».'
+    }
     const err = new Error(msg) as Error & { graphqlResponse?: string }
     err.graphqlResponse = JSON.stringify(gqlErrors.map((e) => ({ message: e.message })))
     throw err
