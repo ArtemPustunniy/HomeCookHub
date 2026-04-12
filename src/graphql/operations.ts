@@ -36,8 +36,8 @@ export const RECIPE_RATING_QUERY = `
 `
 
 export const CREATE_RECIPE_MUTATION = `
-  mutation CreateRecipe($input: RecipeFormInput!) {
-    createRecipe(input: $input) {
+  mutation CreateRecipe($recipeInput: RecipeFormInputModel!) {
+    createRecipe(input: $recipeInput) {
       id title cookingTime difficulty cuisine tags coverImage
       ingredients { id name amount unit }
       instructions nutrition { calories protein carbs fat fiber }
@@ -50,8 +50,8 @@ export const CREATE_RECIPE_MUTATION = `
 `
 
 export const UPDATE_RECIPE_MUTATION = `
-  mutation UpdateRecipe($id: ID!, $input: RecipeFormInput!) {
-    updateRecipe(id: $id, input: $input) {
+  mutation UpdateRecipe($id: ID!, $recipeInput: RecipeFormInputModel!) {
+    updateRecipe(id: $id, input: $recipeInput) {
       id title cookingTime difficulty cuisine tags coverImage
       ingredients { id name amount unit }
       instructions nutrition { calories protein carbs fat fiber }

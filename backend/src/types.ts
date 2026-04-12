@@ -9,11 +9,23 @@ export const RecipeTag = z.enum([
 ])
 export type RecipeTag = z.infer<typeof RecipeTag>
 
+/** GraphQL/JSON часто отдаёт null для пустых Float; NaN из JSON → null */
+const ingredientAmount = z.preprocess(
+  (val) =>
+    val === '' ||
+    val === null ||
+    val === undefined ||
+    (typeof val === 'number' && Number.isNaN(val))
+      ? undefined
+      : val,
+  z.number().positive().optional(),
+)
+
 export const IngredientSchema = z.object({
   id: z.string(),
   name: z.string().min(1),
-  amount: z.number().positive().optional(),
-  unit: z.string().optional(),
+  amount: ingredientAmount,
+  unit: z.preprocess((val) => (val === null || val === undefined ? undefined : val), z.string().optional()),
 })
 export type Ingredient = z.infer<typeof IngredientSchema>
 
@@ -60,8 +72,11 @@ export const RecipeSchema = z.object({
   cookingTime: z.number().positive(),
   difficulty: DifficultyLevel,
   cuisine: z.string().min(1),
-  tags: z.array(RecipeTag).default([]),
-  coverImage: z.string().optional().or(z.literal('')),
+  tags: z.preprocess((val) => (Array.isArray(val) ? val : []), z.array(RecipeTag)),
+  coverImage: z.preprocess(
+    (val) => (val === null || val === undefined ? undefined : val),
+    z.string().optional().or(z.literal('')),
+  ),
   ingredients: z.array(IngredientSchema).min(1),
   instructions: z.array(z.string()).min(1),
   nutrition: NutritionSchema.optional(),

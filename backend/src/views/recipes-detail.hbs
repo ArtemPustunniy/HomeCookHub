@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{{title}}</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" />
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 720px; margin: 2rem auto; padding: 0 1rem; }
+    nav { margin-bottom: 1.25rem; }
+    nav a { margin-right: 1rem; }
+    dl { display: grid; grid-template-columns: 10rem 1fr; gap: 0.35rem 1rem; }
+    dt { font-weight: 600; }
+    .muted { color: #666; }
+  </style>
+</head>
+<body>
+  {{> nav}}
+  {{#if error}}
+  <h1>{{title}}</h1>
+  <p class="muted">{{error}}</p>
+  <p><a href="/view/recipes">К списку</a></p>
+  {{else}}
+  <h1>{{recipe.title}}</h1>
+  <dl>
+    <dt>Кухня</dt><dd>{{recipe.cuisine}}</dd>
+    <dt>Время</dt><dd>{{recipe.cookingTime}} мин</dd>
+    <dt>Сложность</dt><dd>{{recipe.difficulty}}</dd>
+    <dt>Автор</dt><dd>{{recipe.authorName}}</dd>
+    <dt>Создан</dt><dd>{{recipe.createdAt}}</dd>
+  </dl>
+  {{#if (eq recipe.authorId mvcUserId)}}
+  <p>
+    <a href="/view/recipes/{{recipe.id}}/edit">Редактировать</a>
+    <form method="post" action="/view/recipes/{{recipe.id}}/delete" style="display:inline" onsubmit="return confirm('Удалить рецепт?');">
+      <button type="submit">Удалить</button>
+    </form>
+  </p>
+  {{/if}}
+  <p><a href="/view/recipes">← К списку</a></p>
+  {{/if}}
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+  <script>
+    toastr.options = { positionClass: 'toast-bottom-right', timeOut: 4500 };
+    var es = new EventSource('/view/recipes/events');
+    es.onmessage = function (ev) {
+      try {
+        var p = JSON.parse(ev.data);
+        if (p.type === 'ping') return;
+        toastr.info(p.type + (p.id ? ' · id: ' + p.id : ''), 'Коллекция рецептов');
+        if (p.type === 'recipe.deleted' && p.id && window.location.pathname.indexOf(p.id) !== -1) {
+          setTimeout(function () { window.location.href = '/view/recipes'; }, 1200);
+        }
+      } catch (e) {}
+    };
+  </script>
+</body>
+</html>

@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { FormItem, FormLabel, FormMessage } from '@/components/ui/form'
 import { getApiBase } from '@/lib/graphqlClient'
+import { httpErrorMessage } from '@/lib/httpErrorMessage'
 import { setStorageItem } from '@/lib/storage'
 import { STORAGE_KEYS } from '@/lib/storage'
 
@@ -45,7 +46,12 @@ export function Register() {
         })
         const json = await res.json()
         if (!res.ok) {
-          setError(json?.error || json?.details?.fieldErrors?.email?.[0] || json?.details?.fieldErrors?.password?.[0] || 'Ошибка регистрации')
+          const field =
+            json?.details?.fieldErrors?.email?.[0] ?? json?.details?.fieldErrors?.password?.[0]
+          setError(
+            (typeof field === 'string' && field) ||
+              httpErrorMessage(json, 'Ошибка регистрации'),
+          )
           return
         }
         if (json.token && json.user) {

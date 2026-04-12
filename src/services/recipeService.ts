@@ -69,7 +69,7 @@ export async function getRecipeById(id: string): Promise<Recipe | null> {
 export function createRecipe(recipeForm: RecipeForm): Promise<Recipe> {
   if (isGraphQLEnabled()) {
     return graphqlRequest<{ createRecipe: Recipe }>(CREATE_RECIPE_MUTATION, {
-      input: toRecipeFormInput(recipeForm),
+      recipeInput: toRecipeFormInput(recipeForm),
     }).then((d) => d.createRecipe)
   }
   const recipes = getStorageItem<Recipe[]>(STORAGE_KEYS.RECIPES, [])
@@ -92,7 +92,7 @@ export function updateRecipe(id: string, recipeForm: RecipeForm): Promise<Recipe
   if (isGraphQLEnabled()) {
     return graphqlRequest<{ updateRecipe: Recipe }>(UPDATE_RECIPE_MUTATION, {
       id,
-      input: toRecipeFormInput(recipeForm),
+      recipeInput: toRecipeFormInput(recipeForm),
     }).then((d) => d.updateRecipe)
   }
   const recipes = getStorageItem<Recipe[]>(STORAGE_KEYS.RECIPES, [])

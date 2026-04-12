@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{{title}}</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" />
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 960px; margin: 2rem auto; padding: 0 1rem; line-height: 1.45; }
+    nav { margin-bottom: 1.25rem; }
+    nav a { margin-right: 1rem; }
+    table { border-collapse: collapse; width: 100%; }
+    th, td { border: 1px solid #ccc; padding: 0.45rem 0.5rem; text-align: left; vertical-align: top; }
+    th { background: #f5f5f5; }
+    .muted { color: #666; font-size: 0.9rem; }
+    button { cursor: pointer; }
+  </style>
+</head>
+<body>
+  {{> nav}}
+  <h1>{{title}}</h1>
+  <p class="muted">Server-Sent Events: <code>/view/recipes/events</code> — события коллекции показываются через toastr.</p>
+  <table>
+    <thead>
+      <tr>
+        <th>Название</th>
+        <th>Кухня</th>
+        <th>Время</th>
+        <th>Сложность</th>
+        <th>Автор</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {{#each recipes}}
+      <tr>
+        <td><a href="/view/recipes/{{this.id}}">{{this.title}}</a></td>
+        <td>{{this.cuisine}}</td>
+        <td>{{this.cookingTime}} мин</td>
+        <td>{{this.difficulty}}</td>
+        <td>{{this.authorName}}</td>
+        <td>
+          {{#if (eq this.authorId ../mvcUserId)}}
+          <a href="/view/recipes/{{this.id}}/edit">Изменить</a>
+          <form method="post" action="/view/recipes/{{this.id}}/delete" style="display:inline" onsubmit="return confirm('Удалить рецепт?');">
+            <button type="submit">Удалить</button>
+          </form>
+          {{else}}
+          <span class="muted">—</span>
+          {{/if}}
+        </td>
+      </tr>
+      {{else}}
+      <tr><td colspan="6">Пока нет рецептов. <a href="/view/recipes/add">Создать первый</a>.</td></tr>
+      {{/each}}
+    </tbody>
+  </table>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+  <script>
+    toastr.options = { positionClass: 'toast-bottom-right', timeOut: 4500 };
+    var es = new EventSource('/view/recipes/events');
+    es.onmessage = function (ev) {
+      try {
+        var p = JSON.parse(ev.data);
+        if (p.type === 'ping') return;
+        toastr.info(p.type + (p.id ? ' · id: ' + p.id : ''), 'Коллекция рецептов');
+      } catch (e) {}
+    };
+  </script>
+</body>
+</html>

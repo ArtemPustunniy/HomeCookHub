@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { FormItem, FormLabel, FormMessage } from '@/components/ui/form'
 import { getApiBase, isGraphQLEnabled } from '@/lib/graphqlClient'
+import { httpErrorMessage } from '@/lib/httpErrorMessage'
 import { STORAGE_KEYS, setStorageItem } from '@/lib/storage'
 
 const loginSchema = z.object({
@@ -42,7 +43,7 @@ export function Login() {
           body: JSON.stringify({ email: data.email, password: data.password }),
         })
         const json = await res.json()
-        if (!res.ok) throw new Error(json.error || res.statusText)
+        if (!res.ok) throw new Error(httpErrorMessage(json, res.statusText))
         const { token, user: u } = json
         if (token && u?.id) {
           setStorageItem(STORAGE_KEYS.AUTH_TOKEN, token)

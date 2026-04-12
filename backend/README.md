@@ -1,37 +1,61 @@
 # HomeCookHub Backend API
 
-Отдельный бэкенд для приложения HomeCookHub. Запускается независимо; фронтенд подключается к нему по URL (например `http://localhost:3001`).
+Бэкенд на **NestJS** (модули, Guards, ValidationPipe, Swagger, кэш, GraphQL code-first + Apollo).
 
 ## Запуск
 
 ```bash
 cd backend
 npm install
+npx prisma generate
 npm run dev
 ```
 
-Сервер будет доступен по адресу **http://localhost:3001**. Переменная окружения `PORT` задаёт порт (по умолчанию 3001).
+- Сборка: `npm run build`, старт: `npm start` → `node dist/main.js`
+- Порт: `PORT` (по умолчанию **3001**)
+- Node: см. `engines` в `package.json` (рекомендуется LTS 20+)
 
-## Авторизация
+Переменные: `DATABASE_URL`, `JWT_SECRET`; для загрузки изображений — блок `S3_*` в `.env.example`.
 
-Эндпоинты, требующие авторизации, ожидают заголовок:
+## Документация API (OpenAPI / Swagger)
 
-```
-Authorization: Bearer <token>
-```
+После запуска: **http://localhost:3001/api/docs**
 
-Получить токен: `POST /auth/login` с телом `{ "name": "Имя" }` или `POST /auth/register` с телом `{ "name": "Имя" }`. В ответ приходит `{ token, user: { id, name } }`.
+- Теги соответствуют модулям
+- Авторизация: кнопка **Authorize** → схема **Bearer** (JWT)
 
-## Эндпоинты
+## GraphQL (ЛР 5 — code-first)
 
-- **Recipes:** `GET/POST /recipes`, `GET/PUT/DELETE /recipes/:id`, комментарии и рейтинг по спецификации.
-- **Planner:** `GET /planner`, `POST /planner/days/:dayIndex/recipes`, `DELETE /planner/days/:dayIndex/recipes/:recipeId`, `PATCH /planner/recipes/:recipeId/move`, `DELETE /planner/days/:dayIndex`, `DELETE /planner/week`.
-- **Shopping list:** `GET/POST /shopping-list/generate`, `POST/PATCH/DELETE /shopping-list/items`, `PATCH .../items/:itemId/toggle-purchased`, `DELETE /shopping-list`.
-- **Favorites:** `GET/POST /favorites`, `GET/DELETE /favorites/:recipeId`.
-- **Auth:** `POST /auth/register`, `POST /auth/login`, `GET /auth/me`, `POST /auth/logout`.
+- **POST /graphql**, схема генерируется из классов (`@ObjectType`, `@InputType`, `@ArgsType`, резолверы)
+- В каталоге `dist/graphql/` при старте пишется `schema.gql`
+- Ограничения: **глубина** запроса и **сложность** (`graphql-depth-limit`, `graphql-query-complexity`)
+- **Field resolvers** для `Recipe.ratings` и `Recipe.comments`
+- Песочница: встроенный UI Apollo (Explorer) по адресу `/graphql` в браузере (GET)
 
-Полная спецификация — в корне проекта: **BACKEND_API.md**.
+## Поведение из лабораторных (папка `conds`)
 
-## Хранение данных
+| Тема | Реализация |
+|------|------------|
+| ЛР 4 — ValidationPipe, OpenAPI | Глобальный `ValidationPipe`, Swagger, DTO (`auth`, список рецептов) |
+| ЛР 4 — пагинация + Link | `GET /recipes`: заголовок `Link` с `rel="next"` / `rel="prev"` |
+| ЛР 4 — единый формат ошибок | `AllExceptionsFilter` + Prisma `P2025` → 404 |
+| ЛР 5 — GraphQL code-first | Типы и резолверы в `src/graphql/` |
+| ЛР 6 — время запроса | `X-Elapsed-Time` (глобальный interceptor) |
+| ЛР 6 — кэш | Сервер: `CacheModule` + `CacheInterceptor` на `GET /recipes` (TTL ~5 с); клиент: `ETag` + `Cache-Control` на том же маршруте |
+| ЛР 6 — файлы в S3 | `POST /uploads/image` (Bearer), AWS SDK v3, Yandex Object Storage через `S3_ENDPOINT` |
+| ЛР 7 — auth / роли | JWT + Passport; **динамический** `AuthModule.forRoot()` (global); Guards; Swagger Bearer |
+| ЛР 7 — middleware | `RequestContextMiddleware` + заголовок `X-Request-Id` |
 
-Сейчас данные хранятся в памяти (при перезапуске сбрасываются). Для продакшена можно подключить БД (Postgres и т.п.) и заменить слой в `src/store.ts`.
+Провайдеры вроде SuperTokens в методичке — **рекомендация**; у нас свой JWT (допустимый вариант «на свой риск») с теми же приёмами Nest (Guards, документация).
+
+## Основные маршруты
+
+- `GET /health`
+- `GET /api/docs` — Swagger
+- `POST /graphql` — GraphQL
+- `POST /uploads/image` — загрузка изображения (нужен S3 в `.env`)
+- Остальное — как в **BACKEND_API.md** / **API_REQUESTS.md**
+
+## Данные
+
+**PostgreSQL** + **Prisma** (`prisma/schema.prisma`, `npm run prisma:migrate`).

@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{{title}}</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" />
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 640px; margin: 2rem auto; padding: 0 1rem; }
+    nav { margin-bottom: 1.25rem; }
+    nav a { margin-right: 1rem; }
+    label { display: block; margin-top: 0.75rem; font-weight: 600; }
+    input, textarea, select { width: 100%; box-sizing: border-box; margin-top: 0.25rem; padding: 0.4rem; }
+    textarea { min-height: 8rem; font-family: inherit; }
+    button[type="submit"] { margin-top: 1.25rem; padding: 0.5rem 1rem; cursor: pointer; }
+    .muted { color: #666; font-size: 0.9rem; }
+  </style>
+</head>
+<body>
+  {{> nav}}
+  <h1>{{title}}</h1>
+  <p class="muted">Форма отправляется методом POST (create / update), после успеха — редирект 303.</p>
+  <form method="{{method}}" action="{{action}}">
+    <label>Название
+      <input name="title" required maxlength="200" value="{{recipe.title}}" />
+    </label>
+    <label>Время приготовления (мин)
+      <input name="cookingTime" type="number" min="1" required value="{{recipe.cookingTime}}" />
+    </label>
+    <label>Сложность
+      <select name="difficulty" required>
+        <option value="easy" {{#if (eq recipe.difficulty 'easy')}}selected{{/if}}>easy</option>
+        <option value="medium" {{#if (eq recipe.difficulty 'medium')}}selected{{/if}}>medium</option>
+        <option value="hard" {{#if (eq recipe.difficulty 'hard')}}selected{{/if}}>hard</option>
+      </select>
+    </label>
+    <label>Кухня / регион
+      <input name="cuisine" required maxlength="100" value="{{recipe.cuisine}}" />
+    </label>
+    <label>Первый ингредиент (краткая модель ЛР)
+      <input name="ingredientName" required maxlength="200" value="{{recipe.ingredientName}}" />
+    </label>
+    <label>Шаги (каждый с новой строки)
+      <textarea name="instructions" required>{{recipe.instructions}}</textarea>
+    </label>
+    <label>Обложка (URL, опционально)
+      <input name="coverImage" maxlength="2000" value="{{recipe.coverImage}}" />
+    </label>
+    <button type="submit">{{submitLabel}}</button>
+    <a href="/view/recipes">Отмена</a>
+  </form>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+  <script>
+    toastr.options = { positionClass: 'toast-bottom-right', timeOut: 4500 };
+    var es = new EventSource('/view/recipes/events');
+    es.onmessage = function (ev) {
+      try {
+        var p = JSON.parse(ev.data);
+        if (p.type === 'ping') return;
+        toastr.info(p.type + (p.id ? ' · id: ' + p.id : ''), 'Коллекция рецептов');
+      } catch (e) {}
+    };
+  </script>
+</body>
+</html>

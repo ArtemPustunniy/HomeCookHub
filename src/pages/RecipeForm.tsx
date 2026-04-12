@@ -1,11 +1,9 @@
 import { useEffect } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
-import { useForm, useFieldArray } from 'react-hook-form'
+import { useForm, useFieldArray, type FieldErrors } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useUser } from '@/contexts/UserContext'
 import { useRecipe, useCreateRecipe, useUpdateRecipe, useDeleteRecipe } from '@/hooks/useRecipes'
-import { getStorageItem } from '@/lib/storage'
-import { STORAGE_KEYS } from '@/lib/storage'
 import { RecipeFormSchema, type RecipeForm, DifficultyLevel, RecipeTag } from '@/types'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -147,12 +145,9 @@ export function RecipeForm() {
 
   const onSubmit = async (data: RecipeForm) => {
     try {
-      const token = getStorageItem<string | null>(STORAGE_KEYS.AUTH_TOKEN, null)
-      const debugInfo = `id=${id} isEdit=${isEdit} hasToken=${!!token}`
-      console.log('[RecipeForm onSubmit]', debugInfo)
       if (isEdit) {
         if (!id) {
-          alert('ID рецепта не найден. ' + debugInfo)
+          alert('ID рецепта не найден.')
           return
         }
         await updateMutation.mutateAsync({ id, recipeForm: data })
@@ -161,24 +156,32 @@ export function RecipeForm() {
       }
       navigate('/recipes')
     } catch (e) {
-      console.error('Recipe save error:', e)
       const msg = e instanceof Error ? e.message : 'Ошибка сохранения рецепта'
       const full = (e as any)?.graphqlResponse ? `\n\nОтвет сервера:\n${(e as any).graphqlResponse}` : ''
       alert(msg + full)
     }
   }
 
-  const onValidationError = (err: Record<string, unknown>) => {
-    console.error('[RecipeForm] Validation failed:', err)
-    const flatten = (obj: unknown, prefix = ''): string[] => {
-      if (obj && typeof obj === 'object' && 'message' in obj && typeof (obj as { message?: string }).message === 'string')
-        return [`${prefix}: ${(obj as { message: string }).message}`]
-      if (obj && typeof obj === 'object' && !Array.isArray(obj))
-        return Object.entries(obj).flatMap(([k, v]) => flatten(v, prefix ? `${prefix}.${k}` : k))
-      return []
+  const onValidationError = (errors: FieldErrors<RecipeForm>) => {
+    const lines: string[] = []
+    const visit = (node: unknown, path: string) => {
+      if (node == null || typeof node !== 'object') return
+      const n = node as Record<string, unknown>
+      if (typeof n.message === 'string' && n.message) {
+        lines.push(path ? `${path}: ${n.message}` : n.message)
+        return
+      }
+      if (Array.isArray(node)) {
+        node.forEach((item, i) => visit(item, path ? `${path}[${i}]` : `[${i}]`))
+        return
+      }
+      for (const [key, val] of Object.entries(n)) {
+        if (key === 'ref' || key === 'root' || key === 'type' || key === 'types') continue
+        visit(val, path ? `${path}.${key}` : key)
+      }
     }
-    const msg = flatten(err).join('; ') || JSON.stringify(err)
-    alert('Ошибка валидации формы: ' + msg)
+    visit(errors, '')
+    alert(lines.length ? `Ошибка валидации формы:\n${lines.join('\n')}` : 'Ошибка валидации формы')
   }
 
   const handleDelete = () => {
